@@ -1,0 +1,6 @@
+bin
+obj
+debug
+packages
+*.opensdf
+*.vsp
