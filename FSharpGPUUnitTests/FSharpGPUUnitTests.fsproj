@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeviceArrayTests.fs" />
+    <Compile Include="FloatOperatorTests.fs" />
     <None Include="App.config" />
     <None Include="MSTest.runsettings" />
   </ItemGroup>
