@@ -22,8 +22,8 @@ open NovelFS.FSharpGPU
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
 [<TestClass>]
-type FloatOperatorUnitTests() = 
-    /// Unit tests for equality operators
+type FloatComparisonAndEqualityOperatorUnitTests() = 
+    /// Unit tests for equality operator
     [<TestMethod>]
     member x.EqualityTests () = 
         let rnd = System.Random()
@@ -42,27 +42,31 @@ type FloatOperatorUnitTests() =
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .=. -6541.791131529 @> |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
-        // Test4
+    /// Unit tests for inequality operator
+    [<TestMethod>]
+    member x.InequalityTests () = 
+        let rnd = System.Random()
+        // Test1
         let array = Array.init (1000) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 <@ fun x y -> (x+1.0) .<>. y @> |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
-        // Test5
+        // Test2
         let array = Array.init (1) (fun i -> 763445.5508367985)
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. 79.674689 @> |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
-        // Test6
+        // Test3
         let array = Array.init (1) (fun i -> -35390.791131529)
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. -24591.004533 @> |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
-        // Test7
+        // Test4
         let array = Array.init (1) (fun i -> 95875.4577050924)
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. -7050924.2129105 @> |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
-        // Test8
+        // Test5
         let array = Array.init (1) (fun i -> -858.791131529)
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. 103282.77614 @> |> Array.ofCudaArray
