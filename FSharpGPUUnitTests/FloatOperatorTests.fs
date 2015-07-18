@@ -42,6 +42,18 @@ type FloatComparisonAndEqualityOperatorUnitTests() =
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .=. -6541.791131529 @> |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
+        // Test4
+        let array1 = Array.init (1000) (fun i -> sin <| float i)
+        let array2 = Array.init (1000) (fun i -> sin <| float i)
+        let cudaArray1 = DeviceArray.ofArray array1
+        let cudaArray2 = DeviceArray.ofArray array2
+        let cudaResult = (cudaArray1, cudaArray2) ||> DeviceArray.map2 <@ fun x y -> x .=. y @> |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
+        // Test5
+        let array = Array.init (1000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 <@ fun x y -> (x+1.0) .<>. y @> |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
     /// Unit tests for inequality operator
     [<TestMethod>]
     member x.InequalityTests () = 
