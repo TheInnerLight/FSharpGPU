@@ -256,6 +256,32 @@ __global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, doub
 	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 > val2;
 }
 
+/* Kernel for calculating elementwise greater than or equal value over constant and array */
+__global__ void _kernel_dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	double val;
+	getInputArrayValueForIndexingScheme(inputArr, inputOffset, inputN, 0, &val);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val >= d;
+}
+
+/* Kernel for calculating elementwise greater than or equal value over array and constant */
+__global__ void _kernel_dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	double val;
+	getInputArrayValueForIndexingScheme(inputArr, inputOffset, inputN, 0, &val);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = d >= val;
+}
+
+
+/* Kernel for calculating elementwise greater than or equal value over two arrays */
+__global__ void _kernel_dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+{
+	double val1, val2;
+	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
+	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 >= val2;
+}
+
 /* Kernel for calculating elementwise less than value over array and constant */
 __global__ void _kernel_dbmapLT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
 {
@@ -279,6 +305,31 @@ __global__ void _kernel_dbmap2LT(double *input1Arr, const int input1Offset, doub
 	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
 	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
 	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 < val2;
+}
+
+/* Kernel for calculating elementwise less than or equal value over constant and array */
+__global__ void _kernel_dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	double val;
+	getInputArrayValueForIndexingScheme(inputArr, inputOffset, inputN, 0, &val);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val <= d;
+}
+
+/* Kernel for calculating elementwise less than or equal value over array and constant */
+__global__ void _kernel_dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	double val;
+	getInputArrayValueForIndexingScheme(inputArr, inputOffset, inputN, 0, &val);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = d <= val;
+}
+
+/* Kernel for calculating elementwise less than or equal value over two arrays */
+__global__ void _kernel_dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+{
+	double val1, val2;
+	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
+	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 <= val2;
 }
 
 /* Reduce to half the size */
@@ -432,6 +483,7 @@ int ddmapSinh(double *inputArr, const int inputOffset, const int inputN, double 
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise atan over an array */
 int mapArcTan(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -439,6 +491,7 @@ int mapArcTan(double *inputArr, const int inputOffset, const int inputN, double 
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise tan over an array */
 int ddmapTan(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -446,6 +499,7 @@ int ddmapTan(double *inputArr, const int inputOffset, const int inputN, double *
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise tanh over an array */
 int ddmapTanh(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -453,6 +507,7 @@ int ddmapTanh(double *inputArr, const int inputOffset, const int inputN, double 
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise log over an array */
 int ddmapLog(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -460,6 +515,7 @@ int ddmapLog(double *inputArr, const int inputOffset, const int inputN, double *
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise log10 over an array */
 int ddmapLog10(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -467,7 +523,7 @@ int ddmapLog10(double *inputArr, const int inputOffset, const int inputN, double
 	return cudaGetLastError();
 }
 
-
+/* Function for calculating elementwise greater than value over array and constant */
 int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -475,13 +531,15 @@ int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const dou
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise greater than value over array and constant */
 int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmapGT << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	_kernel_dbmapGT2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise greater than value over two arrays */
 int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -489,6 +547,31 @@ int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise greater than or equal value over array and constant */
+int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmapGTE << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise greater than or equal value over array and constant */
+int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmapGTE2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise greater than or equal over two arrays */
+int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmap2GTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise less than value over array and constant */
 int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -496,17 +579,43 @@ int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const dou
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise less than value over array and constant */
 int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmapLT << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	_kernel_dbmapLT2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
 	return cudaGetLastError();
 }
 
+/* Function for calculating elementwise less then value over two arrays */
 int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2LT << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise less than or equal over array and constant */
+int dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmapLTE << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise less than or equal over array and constant */
+int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmapLTE2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise less then or equal over two arrays */
+int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmap2LTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
 	return cudaGetLastError();
 }
 

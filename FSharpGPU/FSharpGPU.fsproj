@@ -67,8 +67,10 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\GPUFSharpInterop\GPUFSharpInterop.vcxproj">
-      <Name>GPUFSharpInterop</Name>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FSharpGPUInterop\FSharpGPUInterop.vcxproj">
+      <Name>FSharpGPUInterop</Name>
       <Project>{17e3aa20-9675-42b7-91db-58b83885d970}</Project>
       <Private>True</Private>
     </ProjectReference>

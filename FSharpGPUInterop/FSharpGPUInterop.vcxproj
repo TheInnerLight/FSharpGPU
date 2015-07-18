@@ -21,6 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{17E3AA20-9675-42B7-91DB-58B83885D970}</ProjectGuid>
     <RootNamespace>GPUFSharpInterop</RootNamespace>
+    <ProjectName>FSharpGPUInterop</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

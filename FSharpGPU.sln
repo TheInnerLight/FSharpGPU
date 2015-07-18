@@ -7,14 +7,14 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharpGPU", "FSharpGPU\FSha
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TestApp", "TestApp\TestApp.fsproj", "{ED7B95E5-5A43-4F91-9CC2-A07A539863B4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GPUFSharpInterop", "GPUFSharpInterop\GPUFSharpInterop.vcxproj", "{17E3AA20-9675-42B7-91DB-58B83885D970}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharpGPUUnitTests", "FSharpGPUUnitTests\FSharpGPUUnitTests.fsproj", "{B160BF61-7129-46AD-A3D6-50AAE1775BA1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{43764E56-0F52-42CC-BD46-C73E6FEB7C91}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\packages.config = .nuget\packages.config
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FSharpGPUInterop", "FSharpGPUInterop\FSharpGPUInterop.vcxproj", "{17E3AA20-9675-42B7-91DB-58B83885D970}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +52,18 @@ Global
 		{ED7B95E5-5A43-4F91-9CC2-A07A539863B4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{ED7B95E5-5A43-4F91-9CC2-A07A539863B4}.Release|Win32.ActiveCfg = Release|Any CPU
 		{ED7B95E5-5A43-4F91-9CC2-A07A539863B4}.Release|x64.ActiveCfg = Release|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Win32.ActiveCfg = Release|Any CPU
+		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|x64.ActiveCfg = Release|Any CPU
 		{17E3AA20-9675-42B7-91DB-58B83885D970}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{17E3AA20-9675-42B7-91DB-58B83885D970}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{17E3AA20-9675-42B7-91DB-58B83885D970}.Debug|Mixed Platforms.Build.0 = Debug|Win32
@@ -66,18 +78,6 @@ Global
 		{17E3AA20-9675-42B7-91DB-58B83885D970}.Release|Win32.Build.0 = Release|Win32
 		{17E3AA20-9675-42B7-91DB-58B83885D970}.Release|x64.ActiveCfg = Release|x64
 		{17E3AA20-9675-42B7-91DB-58B83885D970}.Release|x64.Build.0 = Release|x64
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|Win32.ActiveCfg = Release|Any CPU
-		{B160BF61-7129-46AD-A3D6-50AAE1775BA1}.Release|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
