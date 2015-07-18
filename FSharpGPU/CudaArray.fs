@@ -184,15 +184,23 @@ module private DeviceArrayOps =
         |SpecificCall <@ log10 @> (_, _, [expr]) -> // log10 function
             let internalExpr = decomposeMap expr mapArgs
             compose (log10) (CudaMaps.cudaMap CudaFloatKernels.mapLog10) ResComputeFloat (ResComputeFloat(0.0)) internalExpr
-         // GT OR LT
+         // GREATER THAN / LESS THAN OPERATORS
         |SpecificCall <@ (.>.) @> (_, _, [lhsExpr; rhsExpr]) -> // (>) Operator
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             combineNonCommutative (>) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapGreaterThan) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapGreaterThan2) (CudaMaps.cudaMap2 CudaFloatKernels.map2GreaterThan) ResComputeBool (ResComputeBool(false)) lhs rhs
+        |SpecificCall <@ (.>=.) @> (_, _, [lhsExpr; rhsExpr]) -> // (>=) Operator
+            let lhs = decomposeMap lhsExpr mapArgs
+            let rhs = decomposeMap rhsExpr mapArgs
+            combineNonCommutative (>=) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapGreaterThanOrEqual) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapGreaterThanOrEqual2) (CudaMaps.cudaMap2 CudaFloatKernels.map2GreaterThanOrEqual) ResComputeBool (ResComputeBool(false)) lhs rhs
         |SpecificCall <@ (.<.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<) Operator
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             combineNonCommutative (<) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapLessThan) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapLessThan2) (CudaMaps.cudaMap2 CudaFloatKernels.map2LessThan) ResComputeBool (ResComputeBool(false)) lhs rhs
+        |SpecificCall <@ (.<=.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<=) Operator
+            let lhs = decomposeMap lhsExpr mapArgs
+            let rhs = decomposeMap rhsExpr mapArgs
+            combineNonCommutative (<=) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapLessThanOrEqual) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapLessThanOrEqual2) (CudaMaps.cudaMap2 CudaFloatKernels.map2LessThanOrEqual) ResComputeBool (ResComputeBool(false)) lhs rhs
         // OTHER
         |_ -> failwith "Operation Not Supported."
     

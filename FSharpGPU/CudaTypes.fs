@@ -124,5 +124,3 @@ module ComputeOperators =
 /// An array of items stored on the GPU
 type devicearray<'a when 'a :> IGPUType>(devArray : ComputeArray) = 
     member internal this.DeviceArray = devArray
-
-

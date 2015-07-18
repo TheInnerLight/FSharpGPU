@@ -151,6 +151,15 @@ module internal CudaFloatKernels =
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2GT", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2GreaterThan(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapGTE", CallingConvention = CallingConvention.Cdecl)>]
+    extern int mapGreaterThanOrEqual(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
+
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapGTE2", CallingConvention = CallingConvention.Cdecl)>]
+    extern int mapGreaterThanOrEqual2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
+
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2GTE", CallingConvention = CallingConvention.Cdecl)>]
+    extern int map2GreaterThanOrEqual(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
+
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapLT", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapLessThan(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
@@ -159,6 +168,15 @@ module internal CudaFloatKernels =
 
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2LT", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2LessThan(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
+
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapLTE", CallingConvention = CallingConvention.Cdecl)>]
+    extern int mapLessThanOrEqual(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
+
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapLTE2", CallingConvention = CallingConvention.Cdecl)>]
+    extern int mapLessThanOrEqual2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
+
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2LTE", CallingConvention = CallingConvention.Cdecl)>]
+    extern int map2LessThanOrEqual(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
     // Float to Float reductions
 
