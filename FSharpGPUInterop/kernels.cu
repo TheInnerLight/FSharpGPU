@@ -343,6 +343,10 @@ __global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, 
 	}
 }
 
+/******************************************************************************************************************/
+/* double to double maps */
+/******************************************************************************************************************/
+
 int ddmapAdd(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
@@ -523,6 +527,10 @@ int ddmapLog10(double *inputArr, const int inputOffset, const int inputN, double
 	return cudaGetLastError();
 }
 
+/******************************************************************************************************************/
+/* double to bool maps */
+/******************************************************************************************************************/
+
 /* Function for calculating elementwise greater than value over array and constant */
 int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
 {
@@ -618,6 +626,10 @@ int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, cons
 	_kernel_dbmap2LTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
 	return cudaGetLastError();
 }
+
+/******************************************************************************************************************/
+/* double reductions */
+/******************************************************************************************************************/
 
 int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {

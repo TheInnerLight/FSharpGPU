@@ -21,6 +21,8 @@ struct ThreadBlocks{
 	unsigned int blockCount;
 };
 
+/* double to double maps */
+
 extern "C" __declspec(dllexport) int ddmapAdd(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr);
 
 extern "C" __declspec(dllexport) int ddmap2Add(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr);
@@ -71,11 +73,20 @@ extern "C" __declspec(dllexport) int ddmapLog(double *inputArr, const int inputO
 
 extern "C" __declspec(dllexport) int ddmapLog10(double *inputArr, const int inputOffset, const int inputN, double *outputArr);
 
+
+/* double to bool maps */
+
 extern "C" __declspec(dllexport) int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
 
 extern "C" __declspec(dllexport) int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
 
 extern "C" __declspec(dllexport) int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+
+extern "C" __declspec(dllexport) int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+
+extern "C" __declspec(dllexport) int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+
+extern "C" __declspec(dllexport) int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
 
 extern "C" __declspec(dllexport) int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
 
@@ -83,5 +94,12 @@ extern "C" __declspec(dllexport) int dbmapLT2(double *inputArr, const int inputO
 
 extern "C" __declspec(dllexport) int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
 
+extern "C" __declspec(dllexport) int dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+
+extern "C" __declspec(dllexport) int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+
+extern "C" __declspec(dllexport) int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+
+/* double reductions */
 
 extern "C" __declspec(dllexport) int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr);
