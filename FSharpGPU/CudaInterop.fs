@@ -184,6 +184,12 @@ module internal CudaFloatKernels =
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2Equality", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2Equality(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapNotEquality", CallingConvention = CallingConvention.Cdecl)>]
+    extern int mapNotEquality(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
+
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2NotEquality", CallingConvention = CallingConvention.Cdecl)>]
+    extern int map2NotEquality(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
+
     // Float to Float reductions
 
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddreduceToHalf", CallingConvention = CallingConvention.Cdecl)>]

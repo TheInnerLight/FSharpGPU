@@ -206,6 +206,10 @@ module private DeviceArrayOps =
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             combineCommutative (=) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapEquality) (CudaMaps.cudaMap2 CudaFloatKernels.map2Equality) ResComputeBool (ResComputeBool(false)) lhs rhs
+        |SpecificCall <@ (.<>.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<>) Operator
+            let lhs = decomposeMap lhsExpr mapArgs
+            let rhs = decomposeMap rhsExpr mapArgs
+            combineCommutative (<>) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapNotEquality) (CudaMaps.cudaMap2 CudaFloatKernels.map2NotEquality) ResComputeBool (ResComputeBool(false)) lhs rhs
         // OTHER
         |_ -> failwith "Operation Not Supported."
     

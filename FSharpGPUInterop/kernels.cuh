@@ -104,6 +104,10 @@ extern "C" __declspec(dllexport) int dbmapEquality(double *inputArr, const int i
 
 extern "C" __declspec(dllexport) int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
 
+extern "C" __declspec(dllexport) int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+
+extern "C" __declspec(dllexport) int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+
 /* double reductions */
 
 extern "C" __declspec(dllexport) int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr);
