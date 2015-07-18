@@ -120,6 +120,7 @@ module ComputeOperators =
     let ( .>=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
     let ( .<. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
     let ( .<=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
+    let ( .=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
 
 /// An array of items stored on the GPU
 type devicearray<'a when 'a :> IGPUType>(devArray : ComputeArray) = 

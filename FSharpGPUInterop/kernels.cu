@@ -49,6 +49,10 @@ __device__ void getInputArrayValueForIndexingScheme(double *inputArr, const int 
 	}
 }
 
+/******************************************************************************************************************/
+/* double to double kernel maps */
+/******************************************************************************************************************/
+
 /* Kernel for adding a constant to an array */
 __global__ void _kernel_ddmapAddSubtract(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
@@ -230,6 +234,10 @@ __global__ void _kernel_ddmapExp(double *inputArr, const int inputOffset, const 
 	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = exp(val);
 }
 
+/******************************************************************************************************************/
+/* double to bool kernel maps */
+/******************************************************************************************************************/
+
 /* Kernel for calculating elementwise greater than value over constant and array */
 __global__ void _kernel_dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
 {
@@ -331,6 +339,27 @@ __global__ void _kernel_dbmap2LTE(double *input1Arr, const int input1Offset, dou
 	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
 	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 <= val2;
 }
+
+/* Kernel for calculating elementwise equality between array and constant */
+__global__ void _kernel_dbmapEquality(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	double val;
+	getInputArrayValueForIndexingScheme(inputArr, inputOffset, inputN, 0, &val);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val == d;
+}
+
+/* Kernel for calculating elementwise equality over two arrays */
+__global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+{
+	double val1, val2;
+	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
+	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
+	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 == val2;
+}
+
+/******************************************************************************************************************/
+/* double kernel reductions */
+/******************************************************************************************************************/
 
 /* Reduce to half the size */
 __global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
@@ -624,6 +653,22 @@ int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, cons
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2LTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise equality over array and constant */
+int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmapEquality << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise equality over two arrays */
+int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
 	return cudaGetLastError();
 }
 

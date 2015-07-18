@@ -184,7 +184,7 @@ module private DeviceArrayOps =
         |SpecificCall <@ log10 @> (_, _, [expr]) -> // log10 function
             let internalExpr = decomposeMap expr mapArgs
             compose (log10) (CudaMaps.cudaMap CudaFloatKernels.mapLog10) ResComputeFloat (ResComputeFloat(0.0)) internalExpr
-         // GREATER THAN / LESS THAN OPERATORS
+         // COMPARISON OPERATORS
         |SpecificCall <@ (.>.) @> (_, _, [lhsExpr; rhsExpr]) -> // (>) Operator
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
@@ -201,6 +201,11 @@ module private DeviceArrayOps =
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             combineNonCommutative (<=) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapLessThanOrEqual) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapLessThanOrEqual2) (CudaMaps.cudaMap2 CudaFloatKernels.map2LessThanOrEqual) ResComputeBool (ResComputeBool(false)) lhs rhs
+        // EQUALITY OPERATORS
+        |SpecificCall <@ (.=.) @> (_, _, [lhsExpr; rhsExpr]) -> // (=) Operator
+            let lhs = decomposeMap lhsExpr mapArgs
+            let rhs = decomposeMap rhsExpr mapArgs
+            combineCommutative (=) (CudaMaps.cudaMapWithConst CudaFloatKernels.mapDivide2) (CudaMaps.cudaMap2 CudaFloatKernels.map2Equality) ResComputeBool (ResComputeBool(false)) lhs rhs
         // OTHER
         |_ -> failwith "Operation Not Supported."
     
