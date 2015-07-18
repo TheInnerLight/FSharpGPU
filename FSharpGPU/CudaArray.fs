@@ -63,6 +63,7 @@ module private CudaMaps =
         resultArray
 
 /// Extra Device operations on arrays
+[<RequireQualifiedAccess>]
 type Array =
     /// Converts a device array into a standard host array
     static member ofCudaArray (array : devicearray<devicefloat>) =
@@ -88,7 +89,6 @@ type Array =
 
 
 /// Basic operation implementation on Device Arrays
-[<RequireQualifiedAccess>]
 module private DeviceArrayOps =
     /// Returns the length of the device array
     let length (array : devicearray<'a>) =
