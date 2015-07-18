@@ -16,7 +16,7 @@ along with FSharpGPU.  If not, see <http://www.gnu.org/licenses/>.
 
 (* Copyright © 2015 Philip Curzon *)
 
-open FSharpGPU
+open NovelFS.FSharpGPU
 
 type TimerBuilder() =
     let watch = System.Diagnostics.Stopwatch()

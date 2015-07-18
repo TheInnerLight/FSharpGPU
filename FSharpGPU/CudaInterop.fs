@@ -16,7 +16,7 @@ along with FSharpGPU.  If not, see <http://www.gnu.org/licenses/>.
 
 (* Copyright © 2015 Philip Curzon *)
 
-namespace FSharpGPU
+namespace NovelFS.FSharpGPU
 
 open System
 open System.Runtime.InteropServices

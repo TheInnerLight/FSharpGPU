@@ -16,9 +16,10 @@ along with FSharpGPU.  If not, see <http://www.gnu.org/licenses/>.
 
 (* Copyright © 2015 Philip Curzon *)
 
-namespace FSharpGPU
+namespace NovelFS.FSharpGPU
 
-module private CudaError =
+/// Error handling functions
+module private DeviceError =
     let raiseNotSupportedOperation() =
         raise <| System.NotSupportedException ("Performing operations directly on the CUDA data is not supported.  The operation should be called as part of a Quatation.")
 
@@ -52,6 +53,7 @@ and internal ComputeResult =
         |ResComputeArray devArray -> devArray.Length
         |ResComputeFloat devDouble -> sizeof<float>
         |ResComputeBool devBool -> sizeof<bool>
+/// Functions to query information stored in the device array
 module internal DeviceArrayInfo = 
     let length = 
         function
@@ -62,8 +64,24 @@ module internal DeviceArrayInfo =
 module TypeHelper =
     let raiseNotSupported() = raise <| System.NotSupportedException("This method should not be called directly, it should be used as part of a quotation.")
 
-type devicebool = class end
+//
+// GPU Types
+// ---------
+// These types do not and should not have implemented functionality.  They exist only to allow the F# type-checker to enforce the correctness of expressions.
 
+/// A type that exists on the GPU
+type IGPUType = interface end
+
+/// A GPU type capable of supporting comparison operations
+type IGPUComparable<'a> =
+    inherit IGPUType
+
+/// A bool on the GPU
+type devicebool = class
+    interface IGPUType
+    end
+
+/// A (double precision) floating point on the GPU
 type devicefloat =
     static member ( + ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
     static member ( + ) (flt1 : devicefloat, flt2 : float) : devicefloat = TypeHelper.raiseNotSupported()
@@ -94,6 +112,8 @@ type devicefloat =
     static member Log10 (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
     static member Exp (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
 
+    interface IGPUType
+
 [<AutoOpen>]
 module ComputeOperators =
     let ( .>. ) val1 val2 : devicebool = TypeHelper.raiseNotSupported()
@@ -101,7 +121,8 @@ module ComputeOperators =
     let ( .<. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
     let ( .<=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
 
-type devicearray<'a>(devArray : ComputeArray) = 
+/// An array of items stored on the GPU
+type devicearray<'a when 'a :> IGPUType>(devArray : ComputeArray) = 
     member internal this.DeviceArray = devArray
 
 
