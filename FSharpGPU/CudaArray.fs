@@ -33,6 +33,7 @@ type private MapArgs<'a> =
 type NeighbourMapping<'a,'b> =
     |ImmediateLeft of Expr<'a->'a->'b>
     |ImmediateRight of Expr<'a->'a->'b>
+    |Stencil2 of Expr<'a->'a->'b>
     |Stencil3 of Expr<'a->'a->'a->'b>
 /// Behaviour when arrays are of differing lengths
 type MappingLength =
@@ -282,6 +283,13 @@ module private DeviceArrayOps =
                 createArrayOrOffsetFromSpec mapLengthSpec 
                     (createArrayOffset 0 (Some(array1.Length)) result)
                     (createArrayOffset 0 (Some(array1.Length-1)) result)
+            |Stencil2 code -> // neighbour mapping of X_(i-1) and X_(i+1)
+                let array2 = createArrayOffset -1 None array1
+                let array3 = createArrayOffset 1 None array1
+                let result = mapN code [array2; array3]
+                createArrayOrOffsetFromSpec mapLengthSpec 
+                    (createArrayOffset 0 (Some(array1.Length)) result)
+                    (createArrayOffset 1 (Some(array1.Length-2)) result)
             |Stencil3 code -> // neighbour mapping of X_i, X_(i-1) and X_(i+1)
                 let array2 = createArrayOffset -1 None array1
                 let array3 = createArrayOffset 1 None array1
