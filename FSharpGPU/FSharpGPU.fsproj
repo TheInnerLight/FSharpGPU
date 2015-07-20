@@ -10,8 +10,9 @@
     <RootNamespace>FSharpGPU</RootNamespace>
     <AssemblyName>FSharpGPU</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>FSharpGPU</Name>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -49,9 +50,9 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="CudaInterop.fs" />
-    <Compile Include="CudaTypes.fs" />
-    <Compile Include="CudaArray.fs" />
+    <Compile Include="DeviceInterop.fs" />
+    <Compile Include="DeviceTypes.fs" />
+    <Compile Include="DeviceArray.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>
@@ -67,13 +68,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FSharpGPUInterop\FSharpGPUInterop.vcxproj">
-      <Name>FSharpGPUInterop</Name>
-      <Project>{17e3aa20-9675-42b7-91db-58b83885d970}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

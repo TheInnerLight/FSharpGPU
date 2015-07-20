@@ -30,29 +30,29 @@ type FloatComparisonAndEqualityOperatorUnitTests() =
         // Test1
         let array = Array.init (1000) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 <@ fun x y -> x .=. y @> |> Array.ofCudaArray
+        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 ( fun x y -> x .=. y ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
         // Test2
         let array = Array.init (1) (fun i -> 82873963.2292410628)
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .=. 82873963.2292410628 @> |> Array.ofCudaArray
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .=. 82873963.2292410628 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
         // Test3
         let array = Array.init (1) (fun i -> -6541.791131529)
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .=. -6541.791131529 @> |> Array.ofCudaArray
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .=. -6541.791131529 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
         // Test4
         let array1 = Array.init (1000) (fun i -> sin <| float i)
         let array2 = Array.init (1000) (fun i -> sin <| float i)
         let cudaArray1 = DeviceArray.ofArray array1
         let cudaArray2 = DeviceArray.ofArray array2
-        let cudaResult = (cudaArray1, cudaArray2) ||> DeviceArray.map2 <@ fun x y -> x .=. y @> |> Array.ofCudaArray
+        let cudaResult = (cudaArray1, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .=. y ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
         // Test5
         let array = Array.init (1000) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 <@ fun x y -> (x+1.0) .<>. y @> |> Array.ofCudaArray
+        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 ( fun x y -> (x+1.0) .<>. y ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
     /// Unit tests for inequality operator
     [<TestMethod>]
@@ -61,25 +61,25 @@ type FloatComparisonAndEqualityOperatorUnitTests() =
         // Test1
         let array = Array.init (1000) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 <@ fun x y -> (x+1.0) .<>. y @> |> Array.ofCudaArray
+        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 ( fun x y -> (x+1.0) .<>. y ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
         // Test2
         let array = Array.init (1) (fun i -> 763445.5508367985)
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. 79.674689 @> |> Array.ofCudaArray
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .<>. 79.674689 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
         // Test3
         let array = Array.init (1) (fun i -> -35390.791131529)
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. -24591.004533 @> |> Array.ofCudaArray
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .<>. -24591.004533 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
         // Test4
         let array = Array.init (1) (fun i -> 95875.4577050924)
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. -7050924.2129105 @> |> Array.ofCudaArray
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .<>. -7050924.2129105 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
         // Test5
         let array = Array.init (1) (fun i -> -858.791131529)
         let cudaArray = DeviceArray.ofArray array
-        let cudaResult = cudaArray |> DeviceArray.map <@ fun x -> x .<>. 103282.77614 @> |> Array.ofCudaArray
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .<>. 103282.77614 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
