@@ -252,47 +252,40 @@ module internal GeneralDeviceKernels =
         cudaMap2Operation (cudaArray1.CudaPtr, cudaArray1.Offset, cudaArray2.CudaPtr, cudaArray2.Offset, cudaArray1.Length, resultArray.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
         resultArray
 
+    let mapNonCommutativeArithmetic cmpVal1 cmpVal2 opFltVV opFltAV opFltVA opFltAA =
+        match (cmpVal1, cmpVal2) with 
+        |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeFloat(opFltVV d1 d2)
+        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (opFltAV) d arr)
+        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (opFltVA) d arr)
+        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typePreservingMap2 (opFltAA) arr1 arr2)
+        |_ -> raise <| System.NotSupportedException()
+
+    let mapCommutativeArithmetic cmpVal1 cmpVal2 opFltVV opFltAV opFltAA =
+        mapNonCommutativeArithmetic cmpVal1 cmpVal2 
+            opFltVV opFltAV opFltAV opFltAA // Float Operations
+
     // Arithmetic
 
     let mapAdd cmpVal1 cmpVal2 =
-        match (cmpVal1, cmpVal2) with 
-        |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeFloat(d1 + d2)
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapAdd) d arr)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapAdd) d arr)
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typePreservingMap2 (CudaFloatKernels.map2Add) arr1 arr2)
-        |_ -> raise <| System.NotSupportedException()
+        mapCommutativeArithmetic cmpVal1 cmpVal2 
+            (+) (CudaFloatKernels.mapAdd) (CudaFloatKernels.map2Add) // Float Operations
 
     let mapSubtract cmpVal1 cmpVal2 =
-        match (cmpVal1, cmpVal2) with 
-        |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeFloat(d1 - d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapSubtract) d arr)
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapSubtract2) d arr)
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typePreservingMap2 (CudaFloatKernels.map2Subtract) arr1 arr2)
-        |_ -> raise <| System.NotSupportedException()
+        mapNonCommutativeArithmetic cmpVal1 cmpVal2 
+            (-) (CudaFloatKernels.mapSubtract) (CudaFloatKernels.mapSubtract2) (CudaFloatKernels.map2Subtract) // Float Operations
 
     let mapMultiply cmpVal1 cmpVal2 =
-        match (cmpVal1, cmpVal2) with 
-        |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeFloat(d1 * d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapMultiply) d arr)
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapMultiply) d arr)
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typePreservingMap2 (CudaFloatKernels.map2Multiply) arr1 arr2)
-        |_ -> raise <| System.NotSupportedException()
+        mapCommutativeArithmetic cmpVal1 cmpVal2 
+            (*) (CudaFloatKernels.mapMultiply) (CudaFloatKernels.map2Multiply) // Float Operations
 
     let mapDivide cmpVal1 cmpVal2 =
-        match (cmpVal1, cmpVal2) with 
-        |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeFloat(d1 / d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapDivide) d arr)
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapDivide2) d arr)
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typePreservingMap2 (CudaFloatKernels.map2Divide) arr1 arr2)
-        |_ -> raise <| System.NotSupportedException()
+        mapNonCommutativeArithmetic cmpVal1 cmpVal2 
+            (/) (CudaFloatKernels.mapDivide) (CudaFloatKernels.mapDivide2) (CudaFloatKernels.map2Divide) // Float Operations
+
 
     let mapPower cmpVal1 cmpVal2 =
-        match (cmpVal1, cmpVal2) with 
-        |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeFloat(d1 ** d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapPower) d arr)
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (CudaFloatKernels.mapPower2) d arr)
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typePreservingMap2 (CudaFloatKernels.map2Power) arr1 arr2)
-        |_ -> raise <| System.NotSupportedException()
+        mapNonCommutativeArithmetic cmpVal1 cmpVal2 
+            (/) (CudaFloatKernels.mapPower) (CudaFloatKernels.mapPower2) (CudaFloatKernels.map2Power) // Float Operations
 
     // Maths functions
 
