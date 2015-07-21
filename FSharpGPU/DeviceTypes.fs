@@ -80,7 +80,7 @@ type devicebool = class
     interface IGPUType
     end
 
-/// A (double precision) floating point on the GPU
+/// A (double precision) floating point number on the GPU
 type devicefloat =
     interface IGPUType
     static member ( + ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
@@ -114,8 +114,6 @@ type devicefloat =
     static member CompareTo (flt1 : devicefloat, flt2 : float) = TypeHelper.raiseNotSupported()
     static member CompareTo (flt1 : devicefloat, flt2 : devicefloat) = TypeHelper.raiseNotSupported()
     static member CompareTo (flt1 : float, flt2 : devicefloat) = TypeHelper.raiseNotSupported()
-
-    
 
 [<AutoOpen>]
 module ComputeOperators =
