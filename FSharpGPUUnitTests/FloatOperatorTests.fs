@@ -21,6 +21,20 @@ namespace NovelFS.FSharpGPU.UnitTests
 open NovelFS.FSharpGPU
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
+module FloatHelper = 
+    let incrFloatBySmallest x = 
+        let lng = System.BitConverter.DoubleToInt64Bits(x)
+        match x with 
+        |x when x > 0.0 -> System.BitConverter.Int64BitsToDouble(lng + 1L)
+        |0.0 -> System.Double.Epsilon
+        |_ -> System.BitConverter.Int64BitsToDouble(lng - 1L)
+    let decrFloatBySmallest x = 
+        let lng = System.BitConverter.DoubleToInt64Bits(x)
+        match x with 
+        |x when x > 0.0 -> System.BitConverter.Int64BitsToDouble(lng - 1L)
+        |0.0 -> System.Double.Epsilon
+        |_ -> System.BitConverter.Int64BitsToDouble(lng + 1L)
+
 [<TestClass>]
 type FloatOperatorEqualityUnitTests() = 
     let tolerance = 1e-20
@@ -92,58 +106,40 @@ type FloatOperatorComparisonUnitTests() =
     [<TestMethod>]
     member x.GreaterThanTests () = 
         let rnd = System.Random()
-        let incrFloatBySmallest x = 
-            let lng = System.BitConverter.DoubleToInt64Bits(x)
-            match x with 
-            |x when x > 0.0 -> System.BitConverter.Int64BitsToDouble(lng + 1L)
-            |0.0 -> System.Double.Epsilon
-            |_ -> System.BitConverter.Int64BitsToDouble(lng - 1L)
-        let decrFloatBySmallest x = 
-            let lng = System.BitConverter.DoubleToInt64Bits(x)
-            match x with 
-            |x when x > 0.0 -> System.BitConverter.Int64BitsToDouble(lng - 1L)
-            |0.0 -> System.Double.Epsilon
-            |_ -> System.BitConverter.Int64BitsToDouble(lng + 1L)
+        
         // Test1
         let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
-        let array2 = array |> Array.map (fun x ->  decrFloatBySmallest x )
+        let array2 = array |> Array.map (fun x ->  FloatHelper.decrFloatBySmallest x )
         let cudaArray = DeviceArray.ofArray array
         let cudaArray2 = DeviceArray.ofArray array2
         let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .>. y ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
         // Test2
         let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
-        let array2 = array |> Array.map (fun x -> incrFloatBySmallest x) 
+        let array2 = array |> Array.map (fun x -> FloatHelper.incrFloatBySmallest x) 
         let cudaArray = DeviceArray.ofArray array
         let cudaArray2 = DeviceArray.ofArray array2
         let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .>. y ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall not)
+        // Test3
+        let array = Array.init (1000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .>. -1.0 ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
     /// Unit tests for greater than or equal operator
     [<TestMethod>]
     member x.GreaterThanOrEqualTests () = 
         let rnd = System.Random()
-        let doubleIncrSmallest x = 
-            let lng = System.BitConverter.DoubleToInt64Bits(x)
-            match x with 
-            |x when x > 0.0 -> System.BitConverter.Int64BitsToDouble(lng + 1L)
-            |0.0 -> System.Double.Epsilon
-            |_ -> System.BitConverter.Int64BitsToDouble(lng - 1L)
-        let doubleDecrSmallest x = 
-            let lng = System.BitConverter.DoubleToInt64Bits(x)
-            match x with 
-            |x when x > 0.0 -> System.BitConverter.Int64BitsToDouble(lng - 1L)
-            |0.0 -> System.Double.Epsilon
-            |_ -> System.BitConverter.Int64BitsToDouble(lng + 1L)
         // Test1
         let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
-        let array2 = array |> Array.map (fun x ->  doubleDecrSmallest x )
+        let array2 = array |> Array.map (fun x ->  FloatHelper.decrFloatBySmallest x )
         let cudaArray = DeviceArray.ofArray array
         let cudaArray2 = DeviceArray.ofArray array2
         let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .>=. y ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
         // Test2
         let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
-        let array2 = array |> Array.map (fun x -> doubleIncrSmallest x) 
+        let array2 = array |> Array.map (fun x -> FloatHelper.incrFloatBySmallest x) 
         let cudaArray = DeviceArray.ofArray array
         let cudaArray2 = DeviceArray.ofArray array2
         let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .>=. y ) |> Array.ofCudaArray
@@ -152,6 +148,61 @@ type FloatOperatorComparisonUnitTests() =
         let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 ( fun x y -> x .>=. y ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
+        // Test4
+        let array = Array.init (1000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .>=. 0.0 ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
+    [<TestMethod>]
+    member x.LessThanTests () = 
+        let rnd = System.Random()
+        // Test1
+        let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let array2 = array |> Array.map (fun x ->  FloatHelper.incrFloatBySmallest x )
+        let cudaArray = DeviceArray.ofArray array
+        let cudaArray2 = DeviceArray.ofArray array2
+        let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .<. y ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
+        // Test2
+        let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let array2 = array |> Array.map (fun x -> FloatHelper.decrFloatBySmallest x) 
+        let cudaArray = DeviceArray.ofArray array
+        let cudaArray2 = DeviceArray.ofArray array2
+        let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .<. y ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall not)
+        // Test3
+        let array = Array.init (1000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .<. 2.0 ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
+    /// Unit tests for greater than or equal operator
+    [<TestMethod>]
+    member x.LessThanOrEqualTests () = 
+        let rnd = System.Random()
+        // Test1
+        let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let array2 = array |> Array.map (fun x ->  FloatHelper.incrFloatBySmallest x )
+        let cudaArray = DeviceArray.ofArray array
+        let cudaArray2 = DeviceArray.ofArray array2
+        let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .<=. y ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
+        // Test2
+        let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let array2 = array |> Array.map (fun x -> FloatHelper.decrFloatBySmallest x) 
+        let cudaArray = DeviceArray.ofArray array
+        let cudaArray2 = DeviceArray.ofArray array2
+        let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> x .<=. y ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall not)
+        // Test3
+        let array = Array.init (1000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = (cudaArray, cudaArray) ||> DeviceArray.map2 ( fun x y -> x .<=. y ) |> Array.ofCudaArray
+        Assert.AreEqual(true, cudaResult |> Array.forall id)
+        // Test4
+        let array = Array.init (1000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .<=. 1.0 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult |> Array.forall id)
 [<TestClass>]
 type FloatOperatorArithmeticUnitTests() = 
