@@ -121,19 +121,19 @@ type devicefloat =
 module ComputeOperators =
     /// device capable greater than operator
     let inline (.>.) (val1 : ^a) (val2 : ^b) : devicebool =
-        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
         TypeHelper.raiseNotSupported()
     /// device capable greater than or equal operator
     let inline (.>=.) (val1 : 'a) (val2 : 'b) : devicebool =
-        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
         TypeHelper.raiseNotSupported()
     /// device capable less than operator
     let inline (.<.) (val1 : 'a) (val2 : 'b) : devicebool =
-        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
         TypeHelper.raiseNotSupported()
     /// device capable less than or equal operator
     let inline (.<=.) (val1 : 'a) (val2 : 'b) : devicebool =
-        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
         TypeHelper.raiseNotSupported()
 
     let ( .=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
