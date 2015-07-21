@@ -41,7 +41,6 @@ let main argv =
     let array = Array.init (1000000) (fun i -> float i + 1.0)
     let array2 = Array.init (1000000) (fun i -> float (i*2))
     let array3 = Array.init 1000000 (fun i-> float i)
-    
 
     let timer = TimerBuilder();
     timer{
@@ -52,11 +51,11 @@ let main argv =
         printfn ""
         printfn "CUDA"
         printfn ""
-        let! result = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y -> x ** y * sqrt y + 5.0 * sqrt y) |> Array.ofCudaArray
-        let! result2 = cudaArray |> DeviceArray.map (fun x -> (sqrt(x) / x /5.0 + 1.0/7.78)) |> Array.ofCudaArray
+        let! result = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y -> x ** y * sqrt y + 5.0 * sqrt y) |> Array.ofDeviceArray
+        let! result2 = cudaArray |> DeviceArray.map (fun x -> (sqrt(x) / x /5.0 + 1.0/7.78)) |> Array.ofDeviceArray
         //let! result2 = cudaArray |> CudaArray.map (fun x -> x > 5.0 ) |> Array.ofCudaArray
         let! result3 = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y ->  x * sqrt y .>. 123.5)
-        let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2*l + 0.2*r)) Preserve |> Array.ofCudaArray
+        let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2*l + 0.2*r)) Preserve |> Array.ofDeviceArray
         let! result4 = cudaArray3 |> DeviceArray.associativeReduce (fun x y ->  x + y )
         printfn ""
         printfn "CPU"
