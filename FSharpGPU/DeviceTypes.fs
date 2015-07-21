@@ -75,10 +75,6 @@ module TypeHelper =
 /// A type that exists on the GPU
 type IGPUType = interface end
 
-/// A GPU type capable of supporting comparison operations
-type IGPUComparable<'a> =
-    inherit IGPUType
-
 /// A bool on the GPU
 type devicebool = class
     interface IGPUType
@@ -86,6 +82,7 @@ type devicebool = class
 
 /// A (double precision) floating point on the GPU
 type devicefloat =
+    interface IGPUType
     static member ( + ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
     static member ( + ) (flt1 : devicefloat, flt2 : float) : devicefloat = TypeHelper.raiseNotSupported()
     static member ( + ) (flt1 : float, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
@@ -114,15 +111,31 @@ type devicefloat =
     static member Log (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
     static member Log10 (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
     static member Exp (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
+    static member CompareTo (flt1 : devicefloat, flt2 : float) = TypeHelper.raiseNotSupported()
+    static member CompareTo (flt1 : devicefloat, flt2 : devicefloat) = TypeHelper.raiseNotSupported()
+    static member CompareTo (flt1 : float, flt2 : devicefloat) = TypeHelper.raiseNotSupported()
 
-    interface IGPUType
+    
 
 [<AutoOpen>]
 module ComputeOperators =
-    let ( .>. ) val1 val2 : devicebool = TypeHelper.raiseNotSupported()
-    let ( .>=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
-    let ( .<. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
-    let ( .<=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
+    /// device capable greater than operator
+    let inline (.>.) (val1 : ^a) (val2 : ^b) : devicebool =
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        TypeHelper.raiseNotSupported()
+    /// device capable greater than or equal operator
+    let inline (.>=.) (val1 : 'a) (val2 : 'b) : devicebool =
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        TypeHelper.raiseNotSupported()
+    /// device capable less than operator
+    let inline (.<.) (val1 : 'a) (val2 : 'b) : devicebool =
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        TypeHelper.raiseNotSupported()
+    /// device capable less than or equal operator
+    let inline (.<=.) (val1 : 'a) (val2 : 'b) : devicebool =
+        let compare = ((^a or ^b)  : (static member CompareTo : ^a -> ^b -> devicebool) (val1, val2))
+        TypeHelper.raiseNotSupported()
+
     let ( .=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
     let ( .<>. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
 

@@ -147,19 +147,31 @@ module private DeviceArrayOps =
             let internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapLog10 internalExpr
          // COMPARISON OPERATORS
-        |SpecificCall <@ (.>.) @> (_, _, [lhsExpr; rhsExpr]) -> // (>) Operator
+        |SpecificCall <@ (.>.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr])
+        |SpecificCall <@ (.>.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr])
+        |SpecificCall <@ (.>.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr])
+            -> // (>) Operator
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapGreaterThan lhs rhs
-        |SpecificCall <@ (.>=.) @> (_, _, [lhsExpr; rhsExpr]) -> // (>=) Operator
+        |SpecificCall <@ (.>=.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+        |SpecificCall <@ (.>=.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+        |SpecificCall <@ (.>=.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+            -> // (>=) Operator
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapGreaterThanOrEqual lhs rhs
-        |SpecificCall <@ (.<.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<) Operator
+        |SpecificCall <@ (.<.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+        |SpecificCall <@ (.<.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+        |SpecificCall <@ (.<.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+            -> // (<) Operator
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapLessThan lhs rhs
-        |SpecificCall <@ (.<=.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<=) Operator
+        |SpecificCall <@ (.<=.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+        |SpecificCall <@ (.<=.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+        |SpecificCall <@ (.<=.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
+            -> // (<=) Operator
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapLessThanOrEqual lhs rhs
