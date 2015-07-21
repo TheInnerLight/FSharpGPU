@@ -62,7 +62,7 @@ module internal DeviceInterop =
         |11 -> failwith "cudaErrorInvalidValue : This indicates that one or more of the parameters passed to the API call is not within an acceptable range of values."
         |_ -> failwith (sprintf "cuda error code %i" value)
 
-module internal CudaFloatKernels = 
+module internal DeviceFloatKernels = 
 
     // Float to Float mappings
 
@@ -256,8 +256,8 @@ module internal GeneralDeviceKernels =
         opFltVV opFltAV opFltVA opFltAA = // float value & float value, array & float value, float value & array, array & array
             match (cmpVal1, cmpVal2) with 
             |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeFloat(opFltVV d1 d2)
-            |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (opFltAV) d arr)
-            |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (opFltVA) d arr)
+            |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typePreservingMapWithConst (opFltVA) d arr)
+            |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typePreservingMapWithConst (opFltAV) d arr)
             |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typePreservingMap2 (opFltAA) arr1 arr2)
             |_ -> raise <| System.NotSupportedException()
     /// A helper function for creating commutative arithmetic functions which can operate on many device types
@@ -266,100 +266,102 @@ module internal GeneralDeviceKernels =
             opFltVV opFltAV opFltAV opFltAA // Float Operations
 
     // Arithmetic
+    // ----------
 
     /// A function for elementwise addition of device elements
     let mapAdd cmpVal1 cmpVal2 =
         mapCommutativeArithmetic cmpVal1 cmpVal2 
-            ( + ) (CudaFloatKernels.mapAdd) (CudaFloatKernels.map2Add) // Float Operations
+            ( + ) (DeviceFloatKernels.mapAdd) (DeviceFloatKernels.map2Add) // Float Operations
     /// A function for elementwise subtraction of device elements
     let mapSubtract cmpVal1 cmpVal2 =
         mapNonCommutativeArithmetic cmpVal1 cmpVal2 
-            ( - ) (CudaFloatKernels.mapSubtract) (CudaFloatKernels.mapSubtract2) (CudaFloatKernels.map2Subtract) // Float Operations
+            ( - ) (DeviceFloatKernels.mapSubtract) (DeviceFloatKernels.mapSubtract2) (DeviceFloatKernels.map2Subtract) // Float Operations
     /// A function for elementwise multiplication of device elements
     let mapMultiply cmpVal1 cmpVal2 =
         mapCommutativeArithmetic cmpVal1 cmpVal2 
-            ( * ) (CudaFloatKernels.mapMultiply) (CudaFloatKernels.map2Multiply) // Float Operations
+            ( * ) (DeviceFloatKernels.mapMultiply) (DeviceFloatKernels.map2Multiply) // Float Operations
     /// A function for elementwise division of device elements
     let mapDivide cmpVal1 cmpVal2 =
         mapNonCommutativeArithmetic cmpVal1 cmpVal2 
-            ( / ) (CudaFloatKernels.mapDivide) (CudaFloatKernels.mapDivide2) (CudaFloatKernels.map2Divide) // Float Operations
+            ( / ) (DeviceFloatKernels.mapDivide) (DeviceFloatKernels.mapDivide2) (DeviceFloatKernels.map2Divide) // Float Operations
     /// A function for elementwise power raising of device elements
     let mapPower cmpVal1 cmpVal2 =
         mapNonCommutativeArithmetic cmpVal1 cmpVal2 
-            ( ** ) (CudaFloatKernels.mapPower) (CudaFloatKernels.mapPower2) (CudaFloatKernels.map2Power) // Float Operations
+            ( ** ) (DeviceFloatKernels.mapPower) (DeviceFloatKernels.mapPower2) (DeviceFloatKernels.map2Power) // Float Operations
 
     // Maths functions
+    // ---------------
 
     let mapSqrt cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(sqrt d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapSqrt) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapSqrt) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapSin cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(sin d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapSin) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapSin) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapCos cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(cos d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapCos) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapCos) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapTan cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(tan d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapTan) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapTan) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapSinh cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(sinh d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapSinh) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapSinh) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapCosh cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(cosh d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapCosh) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapCosh) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapTanh cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(tanh d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapTanh) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapTanh) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapArcSin cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(asin d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapArcSin) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapArcSin) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapArcCos cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(acos d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapArcCos) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapArcCos) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapArcTan cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(atan d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapArcTan) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapArcTan) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapLog cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(log d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapLog) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapLog) arr)
         |_ -> raise <| System.NotSupportedException()
 
     let mapLog10 cmpVal =
         match cmpVal with
         |ResComputeFloat d -> ResComputeFloat(log10 d)
-        |ResComputeArray arr -> ResComputeArray(typePreservingMap (CudaFloatKernels.mapLog10) arr)
+        |ResComputeArray arr -> ResComputeArray(typePreservingMap (DeviceFloatKernels.mapLog10) arr)
         |_ -> raise <| System.NotSupportedException()
 
     // Comparison
@@ -367,33 +369,33 @@ module internal GeneralDeviceKernels =
     let mapGreaterThan cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 > d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapGreaterThan) d arr (ResComputeBool(false)))
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapGreaterThan2) d arr (ResComputeBool(false)))
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (CudaFloatKernels.map2GreaterThan) arr1 arr2 (ResComputeBool(false)))
+        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapGreaterThan) d arr (ResComputeBool(false)))
+        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapGreaterThan2) d arr (ResComputeBool(false)))
+        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2GreaterThan) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
 
     let mapGreaterThanOrEqual cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 >= d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapGreaterThanOrEqual) d arr (ResComputeBool(false)))
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapGreaterThanOrEqual2) d arr (ResComputeBool(false)))
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (CudaFloatKernels.map2GreaterThanOrEqual) arr1 arr2 (ResComputeBool(false)))
+        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapGreaterThanOrEqual) d arr (ResComputeBool(false)))
+        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapGreaterThanOrEqual2) d arr (ResComputeBool(false)))
+        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2GreaterThanOrEqual) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
 
     let mapLessThan cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 < d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapLessThan) d arr (ResComputeBool(false)))
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapLessThan2) d arr (ResComputeBool(false)))
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (CudaFloatKernels.map2LessThan) arr1 arr2 (ResComputeBool(false)))
+        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapLessThan) d arr (ResComputeBool(false)))
+        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapLessThan2) d arr (ResComputeBool(false)))
+        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2LessThan) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.InvalidOperationException()
 
     let mapLessThanOrEqual cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 <= d2)
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapLessThanOrEqual) d arr (ResComputeBool(false)))
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapLessThanOrEqual2) d arr (ResComputeBool(false)))
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (CudaFloatKernels.map2LessThanOrEqual) arr1 arr2 (ResComputeBool(false)))
+        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapLessThanOrEqual) d arr (ResComputeBool(false)))
+        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapLessThanOrEqual2) d arr (ResComputeBool(false)))
+        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2LessThanOrEqual) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
 
     // Equality
@@ -402,16 +404,16 @@ module internal GeneralDeviceKernels =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 = d2)
         |ResComputeBool bl1, ResComputeBool bl2 -> ResComputeBool(bl1 = bl2)
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapEquality) d arr (ResComputeBool(false)))
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapEquality) d arr (ResComputeBool(false)))
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (CudaFloatKernels.map2Equality) arr1 arr2 (ResComputeBool(false)))
+        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapEquality) d arr (ResComputeBool(false)))
+        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapEquality) d arr (ResComputeBool(false)))
+        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2Equality) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
 
     let mapInequality cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 <> d2)
         |ResComputeBool bl1, ResComputeBool bl2 -> ResComputeBool(bl1 <> bl2)
-        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapInequality) d arr (ResComputeBool(false)))
-        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (CudaFloatKernels.mapInequality) d arr (ResComputeBool(false)))
-        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (CudaFloatKernels.map2NotEquality) arr1 arr2 (ResComputeBool(false)))
+        |ResComputeFloat d, ResComputeArray arr -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapInequality) d arr (ResComputeBool(false)))
+        |ResComputeArray arr, ResComputeFloat d -> ResComputeArray(typeChangingMapWithConst (DeviceFloatKernels.mapInequality) d arr (ResComputeBool(false)))
+        |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2NotEquality) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
