@@ -22,7 +22,9 @@ open NovelFS.FSharpGPU
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
 [<TestClass>]
-type FloatComparisonAndEqualityOperatorUnitTests() = 
+type FloatOperatorUnitTests() = 
+    let tolerance = 1e-20
+
     /// Unit tests for equality operator
     [<TestMethod>]
     member x.EqualityTests () = 
@@ -83,3 +85,58 @@ type FloatComparisonAndEqualityOperatorUnitTests() =
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.map ( fun x -> x .<>. 103282.77614 ) |> Array.ofCudaArray
         Assert.AreEqual(true, cudaResult.[0])
+    /// Unit tests for multiplication operator
+    [<TestMethod>]
+    member x.MultiplicationTests () = 
+        let rnd = System.Random()
+        // Test1
+        let array = Array.init (10000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let array2 = Array.init (10000) (fun i -> rnd.NextDouble()  * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cudaArray2 = DeviceArray.ofArray array2
+        let cpuResult = (array, array2) ||> Array.map2 ( fun x y -> x * y )
+        let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 (fun x y  -> x * y) |> Array.ofCudaArray
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // Test2
+        let constant = rnd.NextDouble()
+        let array = Array.init (10000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cpuResult = array |> Array.map ( fun x -> x * constant )
+        let cudaResult = cudaArray |> DeviceArray.map (fun x  -> x * constant) |> Array.ofCudaArray
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // Test3
+        let constant = rnd.NextDouble()
+        let array = Array.init (10000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cpuResult = array |> Array.map ( fun x -> x * constant )
+        let cudaResult = cudaArray |> DeviceArray.map (fun x  -> x * constant) |> Array.ofCudaArray
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+    /// Unit tests for division operator
+    [<TestMethod>]
+    member x.DivisionTests () = 
+        let rnd = System.Random()
+        // Test
+        let array = Array.init (100000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let array2 = Array.init (100000) (fun i -> rnd.NextDouble()  * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cudaArray2 = DeviceArray.ofArray array2
+        let cpuResult = (array, array2) ||> Array.map2 ( fun x y -> x / y )
+        let cudaResult = (cudaArray, cudaArray2) ||> DeviceArray.map2 (fun x y  -> x / y) |> Array.ofCudaArray
+        let cpuResult2 = (array, array2) ||> Array.map2 ( fun x y -> y / x )
+        let cudaResult2 = (cudaArray, cudaArray2) ||> DeviceArray.map2 (fun x y  -> y / x) |> Array.ofCudaArray
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuResult2, cudaResult2) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // Test2
+        let constant = rnd.NextDouble()
+        let array = Array.init (10000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cpuResult = array |> Array.map ( fun x -> x / constant )
+        let cudaResult = cudaArray |> DeviceArray.map (fun x  -> x / constant) |> Array.ofCudaArray
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // Test3
+        let constant = rnd.NextDouble()
+        let array = Array.init (10000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cpuResult = array |> Array.map ( fun x -> x / constant )
+        let cudaResult = cudaArray |> DeviceArray.map (fun x  -> x / constant ) |> Array.ofCudaArray
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))

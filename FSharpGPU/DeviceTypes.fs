@@ -47,11 +47,13 @@ type ComputeArray internal (arrayType : ComputeResult, cudaPtr : System.IntPtr, 
 and internal ComputeResult =
     |ResComputeArray of ComputeArray
     |ResComputeFloat of float
+    |ResComputeFloat32 of float32
     |ResComputeBool of bool
     member this.Length =
         match this with
         |ResComputeArray devArray -> devArray.Length
         |ResComputeFloat devDouble -> sizeof<float>
+        |ResComputeFloat32 devFloat -> sizeof<float32>
         |ResComputeBool devBool -> sizeof<bool>
 /// Functions to query information stored in the device array
 module internal DeviceArrayInfo = 
@@ -59,6 +61,7 @@ module internal DeviceArrayInfo =
         function
         |ResComputeArray devArray -> devArray.Length
         |ResComputeFloat devDouble -> sizeof<float>
+        |ResComputeFloat32 devFloat -> sizeof<float32>
         |ResComputeBool devBool -> sizeof<int>
 
 module TypeHelper =

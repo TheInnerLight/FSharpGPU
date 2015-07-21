@@ -50,8 +50,8 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="DeviceInterop.fs" />
     <Compile Include="DeviceTypes.fs" />
+    <Compile Include="DeviceInterop.fs" />
     <Compile Include="DeviceArray.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
