@@ -4,3 +4,5 @@ debug
 packages
 *.opensdf
 *.vsp
+.vs/config/applicationhost.config
+*.sdf

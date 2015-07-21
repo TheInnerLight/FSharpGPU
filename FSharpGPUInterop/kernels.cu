@@ -400,7 +400,7 @@ int ddmapSubtract(double *inputArr, const int inputOffset, const int inputN, con
 int ddmapSubtract2(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapAddSubtract << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	_kernel_ddmapSubtract2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
 	return cudaGetLastError();
 }
 

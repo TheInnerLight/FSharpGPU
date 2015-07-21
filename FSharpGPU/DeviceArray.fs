@@ -203,7 +203,7 @@ module private DeviceArrayOps =
         let result = mapAnyN code Map.empty arrayList
         match result with
             |ResComputeArray devArray -> devArray
-            |_ -> failwith "Return type was not a cuda array"
+            |_ -> failwith "Return type was not a device array"
 
     /// Map involving 3 arrays
     let private map3 (code : Expr<'a->'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) (array3 : devicearray<'a>) =
