@@ -36,6 +36,7 @@ type NeighbourMapping<'a,'b> =
     |ImmediateRight of Expr<'a->'a->'b>
     |Stencil2 of Expr<'a->'a->'b>
     |Stencil3 of Expr<'a->'a->'a->'b>
+    |Stencil5 of Expr<'a->'a->'a->'a->'a->'b>
 /// Behaviour when arrays are of differing lengths
 type MappingLength =
     |Preserve
@@ -257,6 +258,15 @@ module private DeviceArrayOps =
                 createArrayOrOffsetFromSpec mapLengthSpec 
                     (createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
                     (createArrayOffset 1 (Some <| array1.Length-2) result) // shrinking case : 2 elements shorter with 1 positive offset
+            |NeighbourMapping.Stencil5 code -> // neighbour mapping of X_i, X_(i-2), X_(i-1), X_(i+1) and X_(i+2)
+                let array2 = createArrayOffset -2 None array1
+                let array3 = createArrayOffset -1 None array1
+                let array4 = createArrayOffset 1 None array1
+                let array5 = createArrayOffset 2 None array1
+                let result = mapN code [array1; array2; array3; array4; array5]
+                createArrayOrOffsetFromSpec mapLengthSpec 
+                    (createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
+                    (createArrayOffset 2 (Some <| array1.Length-4) result) // shrinking case : 4 elements shorter with 2 positive offset
         devicearray<'b>(result) // convert typeless result to typed device array
     /// Reduction functions
     module TypedReductions =
@@ -284,6 +294,9 @@ type Stencils =
     // A neighbour mapping stencil of the form X_i, X_(i-1) and X_(i+1)
     static member Stencil3 ([<ReflectedDefinition>] code : Expr<'a->'a->'a->'b>) =
         NeighbourMapping.Stencil3 code
+    // A neighbour mapping stencil of the form X_i, X_(i-2), X_(i-1), X_(i+1) and X_(i+2)
+    static member Stencil5 ([<ReflectedDefinition>] code : Expr<'a->'a->'a->'a->'a->'b>) =
+        NeighbourMapping.Stencil5 code
     
 //
 // EXPOSED FUNCTIONS
