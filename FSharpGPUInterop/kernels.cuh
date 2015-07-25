@@ -16,10 +16,7 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 /* Copyright © 2015 Philip Curzon */
 
-struct ThreadBlocks{
-	unsigned int threadCount;
-	unsigned int blockCount;
-};
+
 
 /* double to double maps */
 

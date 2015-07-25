@@ -16,7 +16,9 @@
 
 /* Copyright © 2015 Philip Curzon */
 
+#include "definitions.cuh"
 #include "functions.cuh"
+
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"

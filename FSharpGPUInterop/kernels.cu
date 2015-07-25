@@ -16,6 +16,7 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 /* Copyright © 2015 Philip Curzon */
 
+#include "definitions.cuh"
 #include "kernels.cuh"
 #include "functions.cuh"
 
@@ -31,8 +32,11 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 ThreadBlocks getThreadsAndBlocks(const int n) 
 {
 	ThreadBlocks tb;
-	tb.threadCount = std::min(512, n);
-	tb.blockCount = std::max(1u, (n + tb.threadCount - 1) / tb.threadCount);
+	tb.threadCount = std::min(MAX_THREADS, n);
+	tb.blockCount = std::min(MAX_BLOCKS, std::max(1, (n + tb.threadCount - 1) / tb.threadCount));
+	tb.thrBlockCount = tb.threadCount * tb.blockCount;
+	tb.loopCount = std::min(MAX_BLOCKS, std::max(1, (n + tb.thrBlockCount - 1) / tb.thrBlockCount));
+	tb.N = n;
 	return tb;
 }
 
@@ -49,16 +53,32 @@ __device__ void getInputArrayValueForIndexingScheme(double *inputArr, const int 
 	}
 }
 
+__device__ void getInputArrayValueForIndexingScheme(int pos, double *inputArr, const int inputOffset, const int inputN, int scheme, double *val)
+{
+	switch (scheme)
+	{
+	case 0:
+		if ((pos + inputOffset) >= inputN) *val = 0.0;
+		else *val = inputArr[pos + inputOffset];
+		break;
+	default:
+		*val = inputArr[(pos + inputOffset) % inputN];
+	}
+}
+
 /******************************************************************************************************************/
 /* double to double kernel maps */
 /******************************************************************************************************************/
 
 /* Kernel for adding a constant to an array */
-__global__ void _kernel_ddmapAddSubtract(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
+__global__ void _kernel_ddmapAddSubtract(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, double *outputArr)
 {
 	double val;
-	getInputArrayValueForIndexingScheme(inputArr, inputOffset, inputN, 0, &val);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val + d;
+	for (int i = 0; i < inputN.loopCount; ++i) 
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val + d;
+	}
 }
 /* Kernel for adding two arrays */
 __global__ void _kernel_ddmap2Add(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
@@ -379,7 +399,7 @@ __global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, 
 int ddmapAdd(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapAddSubtract << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, d, outputArr);
+	_kernel_ddmapAddSubtract << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
 	return cudaGetLastError();
 }
 
@@ -393,7 +413,7 @@ int ddmap2Add(double *input1Arr, const int input1Offset, double *input2Arr, cons
 int ddmapSubtract(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapAddSubtract << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, -d, outputArr);
+	_kernel_ddmapAddSubtract << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, -d, outputArr);
 	return cudaGetLastError();
 }
 
