@@ -27,6 +27,7 @@
 #include <functional>
 #include <algorithm>
 
+/* Create an uninitialised cuda array of length n, where each element has size typeSize */
 int createCUDAArray(int n, int typeSize, void **devPtr)
 {
 	cudaError_t cudaStatus;
@@ -35,6 +36,13 @@ int createCUDAArray(int n, int typeSize, void **devPtr)
 	return cudaStatus;
 }
 
+/* Free a cuda array */
+int freeCUDAArray(void *devPtr)
+{
+	return cudaFree(devPtr);
+}
+
+/* Create an uninitialised array of doubles of length n */
 int createCUDADoubleArray(int n, double **devPtr)
 {
 	cudaError_t cudaStatus;
@@ -43,6 +51,9 @@ int createCUDADoubleArray(int n, double **devPtr)
 	return cudaStatus;
 }
 
+
+
+/* Create and initialise array of doubles of length n */
 int initialiseCUDADoubleArray(const double *array, const int n, double **devPtr)
 {
 	cudaError_t cudaStatus;
@@ -52,6 +63,7 @@ int initialiseCUDADoubleArray(const double *array, const int n, double **devPtr)
 	return cudaStatus;
 }
 
+/* Retreive the contents of an array of cuda doubles */
 int retrieveCUDADoubleArray(double *devPtr, const int offset, double dblArray[], const int n)
 {
 	cudaError_t cudaStatus;

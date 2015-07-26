@@ -35,6 +35,16 @@ type internal ArraySpecification =
 
 /// Container for Device Arrays
 type ComputeArray internal (arrayType : ComputeResult, cudaPtr : System.IntPtr, length : int, arraySpec : ArraySpecification, generationMethod : GenerationMethod) = 
+    let mutable isDisposed = false;
+    let cleanup () =
+        match arraySpec with
+        |FullArray ->
+            match isDisposed with
+            |true -> ()
+            |false -> 
+                isDisposed <- true
+                DeviceInterop.freeArray(cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        |OffsetSubarray n -> ()
     member internal this.ArrayType = arrayType
     member internal this.CudaPtr = cudaPtr
     member internal this.GenMethod = generationMethod
@@ -43,6 +53,9 @@ type ComputeArray internal (arrayType : ComputeResult, cudaPtr : System.IntPtr, 
         |FullArray -> 0
         |OffsetSubarray offs -> offs
     member this.Length = length
+    member this.Dispose() = cleanup()
+    override this.Finalize() = cleanup()
+        
 /// Result of breaking down an expression is either an array or just a primitive
 and internal ComputeResult =
     |ResComputeArray of ComputeArray

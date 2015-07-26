@@ -18,6 +18,8 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 extern "C" __declspec(dllexport) int createCUDAArray(int n, int typeSize, void **devPtr);
 
+extern "C" __declspec(dllexport) int freeCUDAArray(void *devPtr);
+
 extern "C" __declspec(dllexport) int createCUDADoubleArray(const int arraySize, double **devPtr);
 
 extern "C" __declspec(dllexport) int initialiseCUDADoubleArray(const double dblArray[], int n, double **devPtr);
