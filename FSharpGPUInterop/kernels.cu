@@ -497,13 +497,14 @@ __global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset
 /******************************************************************************************************************/
 
 /* Reduce to half the size */
-__global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
+__global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, const ThreadBlocks inputN, double *outputArr)
 {
 	double val;
-	getInputArrayValueForIndexingScheme(inputArr, inputOffset, inputN, 0, &val);
-	if ((blockIdx.x * blockDim.x + threadIdx.x) % 2 == 0) 
+	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		outputArr[(blockIdx.x * blockDim.x + threadIdx.x) / 2] = val;
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		if ((i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) % 2 == 0)
+			outputArr[(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) / 2] = val;
 	}
 }
 
@@ -830,6 +831,6 @@ int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2A
 int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddreduceToHalf << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, inputN, outputArr);
+	_kernel_ddreduceToHalf << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, outputArr);
 	return cudaGetLastError();
 }
