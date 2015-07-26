@@ -38,9 +38,9 @@ type TimerBuilder() =
 
 [<EntryPoint>]
 let main argv = 
-    let array = Array.init (1000000) (fun i -> float i + 1.0)
-    let array2 = Array.init (1000000) (fun i -> float (i*2))
-    let array3 = Array.init 1000000 (fun i-> float i)
+    let array = Array.init (5000000) (fun i -> float i + 1.0)
+    let array2 = Array.init (5000000) (fun i -> float (i*2))
+    let array3 = Array.init 5000000 (fun i-> float i)
 
     let timer = TimerBuilder();
     timer{

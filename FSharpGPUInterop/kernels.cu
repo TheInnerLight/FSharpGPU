@@ -81,12 +81,15 @@ __global__ void _kernel_ddmapAddSubtract(double *inputArr, const int inputOffset
 	}
 }
 /* Kernel for adding two arrays */
-__global__ void _kernel_ddmap2Add(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
+__global__ void _kernel_ddmap2Add(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, double *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 + val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 + val2;
+	}
 }
 /* Kernel for subtracting a constant from an array */
 __global__ void _kernel_ddmapSubtract2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, double *outputArr)
@@ -99,12 +102,15 @@ __global__ void _kernel_ddmapSubtract2(double *inputArr, const int inputOffset, 
 	}
 }
 /* Kernel for subtracting two arrays*/
-__global__ void _kernel_ddmap2Subtract(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
+__global__ void _kernel_ddmap2Subtract(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, double *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 - val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 - val2;
+	}
 }
 /* Kernel for multiplying an array by a constant */
 __global__ void _kernel_ddmapMultiply(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, double *outputArr)
@@ -117,12 +123,15 @@ __global__ void _kernel_ddmapMultiply(double *inputArr, const int inputOffset, c
 	}
 }
 /* Kernel for multiplying two arrays */
-__global__ void _kernel_ddmap2Multiply(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
+__global__ void _kernel_ddmap2Multiply(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, double *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 * val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 * val2;
+	}
 }
 /* Kernel for dividing an array by a constant */
 __global__ void _kernel_ddmapDivide(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, double *outputArr)
@@ -145,12 +154,15 @@ __global__ void _kernel_ddmapDivide2(double *inputArr, const int inputOffset, co
 	}
 }
 /* Kernel for dividing two arrays*/
-__global__ void _kernel_ddmap2Divide(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
+__global__ void _kernel_ddmap2Divide(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, double *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 / val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 / val2;
+	}
 }
 /* Kernel for raising an array to the power of a constant*/
 __global__ void _kernel_ddmapPower(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, double *outputArr)
@@ -173,12 +185,15 @@ __global__ void _kernel_ddmapPower2(double *inputArr, const int inputOffset, con
 	}
 }
 /* Kernel for raising each element of one array to the power of one element in another */
-__global__ void _kernel_ddmap2Power(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
+__global__ void _kernel_ddmap2Power(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, double *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = pow(val1, val2);
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = pow(val1, val2);
+	}
 }
 /* Kernel for square rooting an array */
 __global__ void _kernel_ddmapSqrt(double *inputArr, const int inputOffset, const ThreadBlocks inputN, double *outputArr)
@@ -339,12 +354,15 @@ __global__ void _kernel_dbmapGT2(double *inputArr, const int inputOffset, const 
 }
 
 /* Kernel for calculating elementwise greater than value over two arrays */
-__global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+__global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 > val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 > val2;
+	}
 }
 
 /* Kernel for calculating elementwise greater than or equal value over constant and array */
@@ -371,12 +389,15 @@ __global__ void _kernel_dbmapGTE2(double *inputArr, const int inputOffset, const
 
 
 /* Kernel for calculating elementwise greater than or equal value over two arrays */
-__global__ void _kernel_dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+__global__ void _kernel_dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 >= val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 >= val2;
+	}
 }
 
 /* Kernel for calculating elementwise less than value over array and constant */
@@ -402,12 +423,16 @@ __global__ void _kernel_dbmapLT2(double *inputArr, const int inputOffset, const 
 }
 
 /* Kernel for calculating elementwise less than value over two arrays */
-__global__ void _kernel_dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+__global__ void _kernel_dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 < val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 < val2;
+	}
+	
 }
 
 /* Kernel for calculating elementwise less than or equal value over constant and array */
@@ -433,12 +458,15 @@ __global__ void _kernel_dbmapLTE2(double *inputArr, const int inputOffset, const
 }
 
 /* Kernel for calculating elementwise less than or equal value over two arrays */
-__global__ void _kernel_dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+__global__ void _kernel_dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = val1 <= val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 <= val2;
+	}
 }
 
 /* Kernel for calculating elementwise equality between array and constant */
@@ -453,12 +481,15 @@ __global__ void _kernel_dbmapEquality(double *inputArr, const int inputOffset, c
 }
 
 /* Kernel for calculating elementwise equality over two arrays */
-__global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr, const bool not)
+__global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr, const bool not)
 {
 	double val1, val2;
-	getInputArrayValueForIndexingScheme(input1Arr, input1Offset, inputN, 0, &val1);
-	getInputArrayValueForIndexingScheme(input2Arr, input2Offset, inputN, 0, &val2);
-	outputArr[blockIdx.x * blockDim.x + threadIdx.x] = (val1 == val2) ^ not;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = (val1 == val2) ^ not;
+	}
 }
 
 /******************************************************************************************************************/
@@ -490,7 +521,7 @@ int ddmapAdd(double *inputArr, const int inputOffset, const int inputN, const do
 int ddmap2Add(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Add << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_ddmap2Add << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -511,7 +542,7 @@ int ddmapSubtract2(double *inputArr, const int inputOffset, const int inputN, co
 int ddmap2Subtract(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Subtract << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_ddmap2Subtract << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -525,7 +556,7 @@ int ddmapMultiply(double *inputArr, const int inputOffset, const int inputN, con
 int ddmap2Multiply(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Multiply << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_ddmap2Multiply << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -546,7 +577,7 @@ int ddmapDivide2(double *inputArr, const int inputOffset, const int inputN, cons
 int ddmap2Divide(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Divide << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_ddmap2Divide << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -567,7 +598,7 @@ int ddmapPower2(double *inputArr, const int inputOffset, const int inputN, const
 int ddmap2Power(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Power << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_ddmap2Power << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -684,7 +715,7 @@ int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const do
 int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmap2GT << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_dbmap2GT << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -708,7 +739,7 @@ int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const d
 int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmap2GTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_dbmap2GTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -732,7 +763,7 @@ int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const do
 int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmap2LT << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_dbmap2LT << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -756,7 +787,7 @@ int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const d
 int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmap2LTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr);
+	_kernel_dbmap2LTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
 	return cudaGetLastError();
 }
 
@@ -772,7 +803,7 @@ int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, con
 int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr, false);
+	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, false);
 	return cudaGetLastError();
 }
 
@@ -788,7 +819,7 @@ int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, 
 int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, inputN, outputArr, true);
+	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, true);
 	return cudaGetLastError();
 }
 
