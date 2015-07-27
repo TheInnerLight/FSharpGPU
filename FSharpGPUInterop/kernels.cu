@@ -40,6 +40,19 @@ ThreadBlocks getThreadsAndBlocks(const int n)
 	return tb;
 }
 
+/* Split the size of the array between threads and blocks */
+ThreadBlocks getThreadsAndBlocks32(const int n)
+{
+	ThreadBlocks tb;
+	int reducedN = (n + 31) / 32;
+	tb.threadCount = std::min(MAX_THREADS, reducedN);
+	tb.blockCount = std::min(MAX_BLOCKS, std::max(1, (reducedN + tb.threadCount - 1) / tb.threadCount));
+	tb.thrBlockCount = tb.threadCount * tb.blockCount;
+	tb.loopCount = std::min(MAX_BLOCKS, std::max(1, (n + tb.thrBlockCount - 1) / tb.thrBlockCount));
+	tb.N = n;
+	return tb;
+}
+
 __device__ void getInputArrayValueForIndexingScheme(double *inputArr, const int inputOffset, const int inputN, int scheme, double *val)
 {
 	switch (scheme)
@@ -509,6 +522,52 @@ __global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, 
 }
 
 /******************************************************************************************************************/
+/* double filters */
+/******************************************************************************************************************/
+
+/* Kernel for filtering double array based on boolean array predicate */
+__global__ void _kernel_ddfilter(double *inputArr, int *predicateArr, const ThreadBlocks inputN, int *nres, double *outputArr)
+{
+	__shared__ int l_n;
+	//int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int iter = 0; iter < inputN.loopCount; ++iter) {
+		// zero the counter
+		if (threadIdx.x == 0)
+			l_n = 0;
+		__syncthreads();
+
+		// get the values of the array and the predicate
+		double d;
+		int b, pos;
+
+		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+
+		if (i < inputN.N) {
+			d = inputArr[i];
+			b = predicateArr[i];
+			if (b != 0)
+				pos = atomicAdd(&l_n, 1); // increment the counter for those which are true
+		}
+		__syncthreads();
+
+		// leader increments the global counter
+		if (threadIdx.x == 0)
+			l_n = atomicAdd(nres, l_n);
+		__syncthreads();
+
+		// threads with true predicates write their elements
+		if (i < inputN.N && b != 0) {
+			pos += l_n; // increment local pos by global counter
+			outputArr[pos] = d;
+		}
+		__syncthreads();
+
+		i += inputN.thrBlockCount;
+	}
+}
+
+/******************************************************************************************************************/
 /* double to double maps */
 /******************************************************************************************************************/
 
@@ -832,5 +891,21 @@ int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, do
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_ddreduceToHalf << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, outputArr);
+	return cudaGetLastError();
+}
+
+/******************************************************************************************************************/
+/* double filters */
+/******************************************************************************************************************/
+
+/* Function for filtering a double array by a boolean array predicate */
+int ddfilter(double *inputArr, int *predicateArr, const int inputN, double *outputArr, int *outputN)
+{
+	int *globalCounter;
+	cudaMalloc(&globalCounter, sizeof(int));
+	cudaMemcpy(globalCounter, outputN, sizeof(int), cudaMemcpyHostToDevice);
+	ThreadBlocks tb = getThreadsAndBlocks32(inputN);
+	_kernel_ddfilter << < tb.blockCount, tb.threadCount >> >(inputArr, predicateArr, tb, globalCounter, outputArr);
+	cudaMemcpy(outputN, globalCounter, sizeof(int), cudaMemcpyDeviceToHost);
 	return cudaGetLastError();
 }

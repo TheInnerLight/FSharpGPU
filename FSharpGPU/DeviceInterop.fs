@@ -167,6 +167,11 @@ module internal DeviceFloatKernels =
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddreduceToHalf", CallingConvention = CallingConvention.Cdecl)>]
     extern int reduceToHalf(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
+    // Float to Float filters
+
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddfilter", CallingConvention = CallingConvention.Cdecl)>]
+    extern int filter(IntPtr inArr, IntPtr predArr, int inputN, IntPtr outArr, int& size)
+
 module internal GeneralDeviceKernels = 
     /// A (type preserving) map function that involves a device array and a constant
     let private typePreservingMapWithConst cudaMapOperation constant (cudaArray : ComputeArray) =

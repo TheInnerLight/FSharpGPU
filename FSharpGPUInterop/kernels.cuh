@@ -108,3 +108,7 @@ extern "C" __declspec(dllexport) int dbmap2NotEquality(double *input1Arr, const 
 /* double reductions */
 
 extern "C" __declspec(dllexport) int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr);
+
+/* double filters */
+
+extern "C" __declspec(dllexport) int ddfilter(double *inputArr, int *predicateArr, const int inputN, double *outputArr, int *outputN);

@@ -268,6 +268,16 @@ module private DeviceArrayOps =
                     (createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
                     (createArrayOffset 2 (Some <| array1.Length-4) result) // shrinking case : 4 elements shorter with 2 positive offset
         devicearray<'b>(result) // convert typeless result to typed device array
+
+    let filter (code : Expr<'a->devicebool>) (array : devicearray<'a>) =
+        let result = mapN code [array.DeviceArray]
+        let mutable length = 0
+        let mutable cudaPtr = System.IntPtr.Zero
+        DeviceInterop.createUninitialisedArray(array.DeviceArray.Length, DeviceArrayInfo.length array.DeviceArray.ArrayType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        DeviceFloatKernels.filter(array.DeviceArray.CudaPtr, result.CudaPtr, array.DeviceArray.Length, cudaPtr, &length) |> DeviceInterop.cudaCallWithExceptionCheck
+        let arrayRes = ComputeArray(array.DeviceArray.ArrayType, cudaPtr, length, FullArray, UserGenerated)
+        devicearray<'a>(arrayRes)
+
     /// Reduction functions
     module TypedReductions =
         let assocReduceFloat (code : Expr<devicefloat -> devicefloat -> devicefloat>) (array : devicearray<devicefloat>) =
@@ -333,6 +343,15 @@ type DeviceArray =
     /// Builds a new array whose elements are the results of applying the given function to each element of the array and a specified number of its neighbours
     static member mapNeighbours neighbourSpec mapLengthSpec array =
         DeviceArrayOps.mapNeighbours neighbourSpec mapLengthSpec array
+
+    //
+    // FILTERS
+    // ----
+
+    /// Returns a new array containing only the elements of the array for which the given predicate returns true.
+    static member filter ([<ReflectedDefinition>] expr) =
+        DeviceArrayOps.filter expr
+
     //
     // REDUCTIONS
     // ----------
