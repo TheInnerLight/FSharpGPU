@@ -75,37 +75,37 @@ extern "C" __declspec(dllexport) int ddmapLog10(double *inputArr, const int inpu
 
 /* double to bool maps */
 
-extern "C" __declspec(dllexport) int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+extern "C" __declspec(dllexport) int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+extern "C" __declspec(dllexport) int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+extern "C" __declspec(dllexport) int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+extern "C" __declspec(dllexport) int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+extern "C" __declspec(dllexport) int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr);
+extern "C" __declspec(dllexport) int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
 
-extern "C" __declspec(dllexport) int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr);
+extern "C" __declspec(dllexport) int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr);
 
 /* double reductions */
 
@@ -113,4 +113,4 @@ extern "C" __declspec(dllexport) int ddreduceToHalf(double *inputArr, const int 
 
 /* double filters */
 
-extern "C" __declspec(dllexport) int ddfilter(double *inputArr, int *predicateArr, const int inputN, double *outputArr, int *outputN);
+extern "C" __declspec(dllexport) int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *outputArr, __int32 *outputN);

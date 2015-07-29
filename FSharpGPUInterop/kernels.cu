@@ -35,7 +35,7 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 
 /* Split the size of the array between threads and blocks */
-ThreadBlocks getThreadsAndBlocks(const int n) 
+ThreadBlocks getThreadsAndBlocks(const int n)
 {
 	ThreadBlocks tb;
 	tb.threadCount = std::min(MAX_THREADS, n);
@@ -53,7 +53,7 @@ ThreadBlocks getThreadsAndBlocks32(const int n)
 	
 	tb.threadCount = std::min(MAX_THREADS, n);
 	tb.loopCount = std::min(32, std::max(1, (n + tb.threadCount - 1) / tb.threadCount));
-	int thrLoopCount = tb.loopCount * tb.threadCount;
+	__int32 thrLoopCount = tb.loopCount * tb.threadCount;
 	tb.blockCount = std::min(MAX_BLOCKS, std::max(1, (n + thrLoopCount - 1) / thrLoopCount));
 	tb.thrBlockCount = tb.threadCount * tb.blockCount;
 	tb.N = n;
@@ -94,7 +94,7 @@ __device__ void getInputArrayValueForIndexingScheme(int pos, double *inputArr, c
 __global__ void _kernel_ddmapAddSubtract(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, double *outputArr)
 {
 	double val;
-	for (int i = 0; i < inputN.loopCount; ++i) 
+	for (int i = 0; i < inputN.loopCount; ++i)
 	{
 		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val + d;
@@ -351,7 +351,7 @@ __global__ void _kernel_ddmapExp(double *inputArr, const int inputOffset, const 
 /******************************************************************************************************************/
 
 /* Kernel for calculating elementwise greater than value over constant and array */
-__global__ void _kernel_dbmapGT(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapGT(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -362,7 +362,7 @@ __global__ void _kernel_dbmapGT(double *inputArr, const int inputOffset, const T
 }
 
 /* Kernel for calculating elementwise greater than value over array and constant */
-__global__ void _kernel_dbmapGT2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapGT2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 
 	double val;
@@ -374,7 +374,7 @@ __global__ void _kernel_dbmapGT2(double *inputArr, const int inputOffset, const 
 }
 
 /* Kernel for calculating elementwise greater than value over two arrays */
-__global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
+__global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
 {
 	double val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -386,7 +386,7 @@ __global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, doub
 }
 
 /* Kernel for calculating elementwise greater than or equal value over constant and array */
-__global__ void _kernel_dbmapGTE(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapGTE(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -397,7 +397,7 @@ __global__ void _kernel_dbmapGTE(double *inputArr, const int inputOffset, const 
 }
 
 /* Kernel for calculating elementwise greater than or equal value over array and constant */
-__global__ void _kernel_dbmapGTE2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapGTE2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -409,7 +409,7 @@ __global__ void _kernel_dbmapGTE2(double *inputArr, const int inputOffset, const
 
 
 /* Kernel for calculating elementwise greater than or equal value over two arrays */
-__global__ void _kernel_dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
+__global__ void _kernel_dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
 {
 	double val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -421,7 +421,7 @@ __global__ void _kernel_dbmap2GTE(double *input1Arr, const int input1Offset, dou
 }
 
 /* Kernel for calculating elementwise less than value over array and constant */
-__global__ void _kernel_dbmapLT(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapLT(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -432,7 +432,7 @@ __global__ void _kernel_dbmapLT(double *inputArr, const int inputOffset, const T
 }
 
 /* Kernel for calculating elementwise less than value over array and constant */
-__global__ void _kernel_dbmapLT2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapLT2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -443,7 +443,7 @@ __global__ void _kernel_dbmapLT2(double *inputArr, const int inputOffset, const 
 }
 
 /* Kernel for calculating elementwise less than value over two arrays */
-__global__ void _kernel_dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
+__global__ void _kernel_dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
 {
 	double val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -456,7 +456,7 @@ __global__ void _kernel_dbmap2LT(double *input1Arr, const int input1Offset, doub
 }
 
 /* Kernel for calculating elementwise less than or equal value over constant and array */
-__global__ void _kernel_dbmapLTE(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapLTE(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -467,7 +467,7 @@ __global__ void _kernel_dbmapLTE(double *inputArr, const int inputOffset, const 
 }
 
 /* Kernel for calculating elementwise less than or equal value over array and constant */
-__global__ void _kernel_dbmapLTE2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr)
+__global__ void _kernel_dbmapLTE2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -478,7 +478,7 @@ __global__ void _kernel_dbmapLTE2(double *inputArr, const int inputOffset, const
 }
 
 /* Kernel for calculating elementwise less than or equal value over two arrays */
-__global__ void _kernel_dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr)
+__global__ void _kernel_dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
 {
 	double val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -490,7 +490,7 @@ __global__ void _kernel_dbmap2LTE(double *input1Arr, const int input1Offset, dou
 }
 
 /* Kernel for calculating elementwise equality between array and constant */
-__global__ void _kernel_dbmapEquality(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, int *outputArr, const bool not)
+__global__ void _kernel_dbmapEquality(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr, const bool not)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -501,7 +501,7 @@ __global__ void _kernel_dbmapEquality(double *inputArr, const int inputOffset, c
 }
 
 /* Kernel for calculating elementwise equality over two arrays */
-__global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, int *outputArr, const bool not)
+__global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr, const bool not)
 {
 	double val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -517,7 +517,7 @@ __global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset
 /******************************************************************************************************************/
 
 /* Reduce to half the size */
-__global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, const ThreadBlocks inputN, double *outputArr)
+__global__ void _kernel_ddreduceToHalf(double *inputArr, const __int32 inputOffset, const ThreadBlocks inputN, double *outputArr)
 {
 	double val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -529,15 +529,15 @@ __global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, 
 }
 
 /******************************************************************************************************************/
-/* int kernel reductions */
+/* __int32 kernel reductions */
 /******************************************************************************************************************/
 
 
 
-__global__ void _kernel_iiprefixSum(int *inputArr, int n, int *outputArr)
+__global__ void _kernel_iiprefixSum(__int32 *inputArr, int n, __int32 *outputArr)
 {
-	extern __shared__ int t1[];
-	int offset = 1;
+	extern __shared__ __int32 t1[];
+	__int32 offset = 1;
 	t1[2 * threadIdx.x] = inputArr[2 * threadIdx.x];
 	t1[2 * threadIdx.x + 1] = inputArr[2 * threadIdx.x + 1];
 
@@ -563,7 +563,7 @@ __global__ void _kernel_iiprefixSum(int *inputArr, int n, int *outputArr)
 		{
 			int	ai = offset*(2 * threadIdx.x + 1) - 1;
 			int	bi = offset*(2 * threadIdx.x + 2) - 1;
-			int t = t1[ai];
+			__int32 t = t1[ai];
 			t1[ai] = t1[bi];
 			t1[bi] += t;
 		}
@@ -580,9 +580,9 @@ __global__ void _kernel_iiprefixSum(int *inputArr, int n, int *outputArr)
 /******************************************************************************************************************/
 
 /* Kernel for filtering double array based on boolean array predicate */
-__global__ void _kernel_ddfilter(double *inputArr, int *predicateArr, const ThreadBlocks inputN, int *nres, double *outputArr)
+__global__ void _kernel_ddfilter(double *inputArr, __int32 *predicateArr, const ThreadBlocks inputN, __int32 *nres, double *outputArr)
 {
-	__shared__ int l_n;
+	__shared__ __int32 l_n;
 
 	for (int iter = 0; iter < inputN.loopCount; ++iter) {
 		// zero the counter
@@ -591,9 +591,9 @@ __global__ void _kernel_ddfilter(double *inputArr, int *predicateArr, const Thre
 
 		// get the values of the array and the predicate
 		double d;
-		int b, pos;
+		__int32 b, pos;
 
-		//int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		//__int32 i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
 		int i = (blockIdx.x * inputN.loopCount * inputN.threadCount) + iter * inputN.threadCount + threadIdx.x;
 
 		if (i < inputN.N) {
@@ -619,18 +619,31 @@ __global__ void _kernel_ddfilter(double *inputArr, int *predicateArr, const Thre
 }
 
 /* Kernel for filtering double array based a prefix counter */
-__global__ void _kernel_ddfilterPrefix(double *inputArr, int *prefixArr, const ThreadBlocks inputN, double *outputArr)
+__global__ void _kernel_ddfilterPrefix(double *inputArr, __int32 *prefixArr, const ThreadBlocks inputN, double *outputArr)
 {
 	for (int iter = 0; iter < inputN.loopCount; ++iter) {
 		int i = (blockIdx.x * inputN.loopCount * inputN.threadCount) + iter * inputN.threadCount + threadIdx.x;
 		if (prefixArr[i] > 0 && i < inputN.N) 
 		{
-			outputArr[prefixArr[i] - 1] = inputArr[i];
+			if (i == 0 || prefixArr[i - 1] < prefixArr[i]) 
+			{
+				outputArr[prefixArr[i]-1] = inputArr[i-1];
+			}
 		}
 	}
 }
 
-
+/* Kernel for filtering double array based a prefix counter */
+__global__ void _kernel_iiInit(__int32 *prefixArr, const ThreadBlocks inputN, __int32 val)
+{
+	for (int iter = 0; iter < inputN.loopCount; ++iter) {
+		int i = (blockIdx.x * inputN.loopCount * inputN.threadCount) + iter * inputN.threadCount + threadIdx.x;
+		if (i < inputN.N)
+		{
+			prefixArr[i] = val;
+		}
+	}
+}
 
 /******************************************************************************************************************/
 /* double to double maps */
@@ -706,7 +719,7 @@ int ddmap2Divide(double *input1Arr, const int input1Offset, double *input2Arr, c
 	return cudaGetLastError();
 }
 
-int ddmapPower(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
+__int32 ddmapPower(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_ddmapPower << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -734,7 +747,7 @@ int ddmapSqrt(double *inputArr, const int inputOffset, const int inputN, double 
 	return cudaGetLastError();
 }
 
-int ddmapArcCos(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
+__int32 ddmapArcCos(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_ddmapArcCos << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, outputArr);
@@ -821,7 +834,7 @@ int ddmapLog10(double *inputArr, const int inputOffset, const int inputN, double
 /******************************************************************************************************************/
 
 /* Function for calculating elementwise greater than value over array and constant */
-int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapGT << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -829,7 +842,7 @@ int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const dou
 }
 
 /* Function for calculating elementwise greater than value over array and constant */
-int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapGT2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -837,7 +850,7 @@ int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const do
 }
 
 /* Function for calculating elementwise greater than value over two arrays */
-int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2GT << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
@@ -845,7 +858,7 @@ int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const
 }
 
 /* Function for calculating elementwise greater than or equal value over array and constant */
-int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapGTE << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -853,7 +866,7 @@ int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const do
 }
 
 /* Function for calculating elementwise greater than or equal value over array and constant */
-int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapGTE2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -861,7 +874,7 @@ int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const d
 }
 
 /* Function for calculating elementwise greater than or equal over two arrays */
-int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2GTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
@@ -869,7 +882,7 @@ int dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, cons
 }
 
 /* Function for calculating elementwise less than value over array and constant */
-int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapLT << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -877,7 +890,7 @@ int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const dou
 }
 
 /* Function for calculating elementwise less than value over array and constant */
-int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapLT2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -885,7 +898,7 @@ int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const do
 }
 
 /* Function for calculating elementwise less then value over two arrays */
-int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2LT << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
@@ -893,7 +906,7 @@ int dbmap2LT(double *input1Arr, const int input1Offset, double *input2Arr, const
 }
 
 /* Function for calculating elementwise less than or equal over array and constant */
-int dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+__int32 dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapLTE << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -901,7 +914,7 @@ int dbmapLTE(double *inputArr, const int inputOffset, const int inputN, const do
 }
 
 /* Function for calculating elementwise less than or equal over array and constant */
-int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapLTE2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
@@ -909,7 +922,7 @@ int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const d
 }
 
 /* Function for calculating elementwise less then or equal over two arrays */
-int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2LTE << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
@@ -917,7 +930,7 @@ int dbmap2LTE(double *input1Arr, const int input1Offset, double *input2Arr, cons
 }
 
 /* Function for calculating elementwise equality over array and constant */
-int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapEquality << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, false);
@@ -925,7 +938,7 @@ int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, con
 }
 
 /* Function for calculating elementwise equality over two arrays */
-int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, false);
@@ -933,7 +946,7 @@ int dbmap2Equality(double *input1Arr, const int input1Offset, double *input2Arr,
 }
 
 /* Function for calculating elementwise not equality over array and constant */
-int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, const double d, int *outputArr)
+int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmapEquality << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, true);
@@ -941,7 +954,7 @@ int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, 
 }
 
 /* Function for calculating elementwise not equality over two arrays */
-int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, int *outputArr)
+int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const __int32 inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, true);
@@ -964,19 +977,21 @@ int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, do
 /******************************************************************************************************************/
 
 /* Function for filtering a double array by a boolean array predicate */
-int ddfilter(double *inputArr, int *predicateArr, const int inputN, double *outputArr, int *outputN)
+int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *outputArr, __int32 *outputN)
 {
-	int *prefixSum;
-	ThreadBlocks tb = getThreadsAndBlocks32(inputN);
+	__int32 *prefixSum;
+	int nP1 = inputN + 1; // prefix sum is one longer than array because of leading -1
+	ThreadBlocks tb = getThreadsAndBlocks(nP1);
 
 	// Calculate parallel prefix sum
-	cudaMalloc(&prefixSum, inputN * sizeof(int));
-	preallocBlockSums(inputN);
-	prescanArray(prefixSum, predicateArr, inputN);
-	deallocBlockSums();
+	cudaMalloc(&prefixSum, nP1 * sizeof(int));
+
+	ScanBlockAllocation sba = preallocBlockSums(nP1);
+	prescanArray(prefixSum, predicateArr, nP1, sba);
+	deallocBlockSums(sba);
 
 	_kernel_ddfilterPrefix << < tb.blockCount, tb.threadCount >> >(inputArr, prefixSum, tb, outputArr);
 
-	cudaMemcpy(outputN, prefixSum + (inputN - 1), sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(outputN, prefixSum + (inputN), sizeof(int), cudaMemcpyDeviceToHost);
 	return cudaGetLastError();
 }

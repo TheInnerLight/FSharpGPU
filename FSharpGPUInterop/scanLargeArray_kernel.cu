@@ -30,6 +30,8 @@
 #include "scankernels.cuh"
 #include <assert.h>
 
+
+
 // Define this to more rigorously avoid bank conflicts, 
 // even at the lower (root) levels of the tree
 // Note that due to the higher addressing overhead, performance 
@@ -74,9 +76,9 @@
 //
 
 template <bool isNP2>
-__device__ void loadSharedChunkFromMem(int *s_data, const int *g_idata, int n, int baseIndex, int& ai, int& bi, int& mem_ai, int& mem_bi, int& bankOffsetA, int& bankOffsetB)
+__device__ void loadSharedChunkFromMem(__int32 *s_data, const __int32 *g_idata, __int32 n, __int32 baseIndex, int& ai, int& bi, int& mem_ai, int& mem_bi, int& bankOffsetA, int& bankOffsetB)
 {
-    int thid = threadIdx.x;
+    __int32 thid = threadIdx.x;
     mem_ai = baseIndex + threadIdx.x;
     mem_bi = mem_ai + blockDim.x;
 
@@ -102,7 +104,7 @@ __device__ void loadSharedChunkFromMem(int *s_data, const int *g_idata, int n, i
 }
 
 template <bool isNP2>
-__device__ void storeSharedChunkToMem(int* g_odata, const int* s_data, int n, int ai, int bi, int mem_ai, int mem_bi, int bankOffsetA, int bankOffsetB)
+__device__ void storeSharedChunkToMem(int* g_odata, const int* s_data, __int32 n, __int32 ai, __int32 bi, __int32 mem_ai, __int32 mem_bi, __int32 bankOffsetA, __int32 bankOffsetB)
 {
     __syncthreads();
 
@@ -120,11 +122,11 @@ __device__ void storeSharedChunkToMem(int* g_odata, const int* s_data, int n, in
 }
 
 template <bool storeSum>
-__device__ void clearLastElement(int* s_data, int *g_blockSums, int blockIndex)
+__device__ void clearLastElement(int* s_data, __int32 *g_blockSums, __int32 blockIndex)
 {
     if (threadIdx.x == 0)
     {
-        int index = (blockDim.x << 1) - 1;
+		unsigned int index = (blockDim.x << 1) - 1;
         index += CONFLICT_FREE_OFFSET(index);
         
         if (storeSum) // compile-time decision
@@ -140,21 +142,21 @@ __device__ void clearLastElement(int* s_data, int *g_blockSums, int blockIndex)
 
 
 
-__device__ unsigned int buildSum(int *s_data)
+__device__ unsigned __int32 buildSum(__int32 *s_data)
 {
-    unsigned int thid = threadIdx.x;
+	unsigned int thid = threadIdx.x;
     unsigned int stride = 1;
     
     // build the sum in place up the tree
-    for (int d = blockDim.x; d > 0; d >>= 1)
+    for (__int32 d = blockDim.x; d > 0; d >>= 1)
     {
         __syncthreads();
 
         if (thid < d)      
         {
-            int i  = __mul24(__mul24(2, stride), thid);
-            int ai = i + stride - 1;
-            int bi = ai + stride;
+            __int32 i  = __mul24(__mul24(2, stride), thid);
+            __int32 ai = i + stride - 1;
+            __int32 bi = ai + stride;
 
             ai += CONFLICT_FREE_OFFSET(ai);
             bi += CONFLICT_FREE_OFFSET(bi);
@@ -168,7 +170,7 @@ __device__ unsigned int buildSum(int *s_data)
     return stride;
 }
 
-__device__ void scanRootToLeaves(int *s_data, unsigned int stride)
+__device__ void scanRootToLeaves(__int32 *s_data, unsigned int stride)
 {
      unsigned int thid = threadIdx.x;
 
@@ -182,13 +184,13 @@ __device__ void scanRootToLeaves(int *s_data, unsigned int stride)
         if (thid < d)
         {
             int i  = __mul24(__mul24(2, stride), thid);
-            int ai = i + stride - 1;
-            int bi = ai + stride;
+			int ai = i + stride - 1;
+			int bi = ai + stride;
 
             ai += CONFLICT_FREE_OFFSET(ai);
             bi += CONFLICT_FREE_OFFSET(bi);
 
-            int t  = s_data[ai];
+            __int32 t  = s_data[ai];
             s_data[ai] = s_data[bi];
             s_data[bi] += t;
         }
@@ -196,42 +198,35 @@ __device__ void scanRootToLeaves(int *s_data, unsigned int stride)
 }
 
 template <bool storeSum>
-__device__ void prescanBlock(int *data, int blockIndex, int *blockSums)
+__device__ void prescanBlock(__int32 *data, int blockIndex, __int32 *blockSums)
 {
-    int stride = buildSum(data);               // build the sum in place up the tree
-    clearLastElement<storeSum>(data, blockSums, 
-                               (blockIndex == 0) ? blockIdx.x : blockIndex);
+    __int32 stride = buildSum(data);               // build the sum in place up the tree
+    clearLastElement<storeSum>(data, blockSums, (blockIndex == 0) ? blockIdx.x : blockIndex);
     scanRootToLeaves(data, stride);            // traverse down tree to build the scan 
 }
 
 template <bool storeSum, bool isNP2>
-__global__ void prescan(int *g_odata, const int *g_idata, int *g_blockSums, int n, int blockIndex, int baseIndex)
+__global__ void prescan(__int32 *g_odata, const __int32 *g_idata, __int32 *g_blockSums, int n, int blockIndex, int baseIndex)
 {
-    int ai, bi, mem_ai, mem_bi, bankOffsetA, bankOffsetB;
-    extern __shared__ int s_data[];
+    __int32 ai, bi, mem_ai, mem_bi, bankOffsetA, bankOffsetB;
+    extern __shared__ __int32 s_data[];
 
     // load data into shared memory
-    loadSharedChunkFromMem<isNP2>(s_data, g_idata, n, 
-                                  (baseIndex == 0) ? 
-                                  __mul24(blockIdx.x, (blockDim.x << 1)):baseIndex,
-                                  ai, bi, mem_ai, mem_bi, 
-                                  bankOffsetA, bankOffsetB); 
+    loadSharedChunkFromMem<isNP2>(s_data, g_idata, n, (baseIndex == 0) ? __mul24(blockIdx.x, (blockDim.x << 1)) : baseIndex, ai, bi, mem_ai, mem_bi, bankOffsetA, bankOffsetB); 
     // scan the data in each block
     prescanBlock<storeSum>(s_data, blockIndex, g_blockSums); 
     // write results to device memory
-    storeSharedChunkToMem<isNP2>(g_odata, s_data, n, 
-                                 ai, bi, mem_ai, mem_bi, 
-                                 bankOffsetA, bankOffsetB);  
+    storeSharedChunkToMem<isNP2>(g_odata, s_data, n, ai, bi, mem_ai, mem_bi, bankOffsetA, bankOffsetB);  
 }
 
 
-__global__ void uniformAdd(int *g_data, int *uniforms, int n, int blockOffset, int baseIndex)
+__global__ void uniformAdd(__int32 *g_data, __int32 *uniforms, int n, int blockOffset, int baseIndex)
 {
-    __shared__ int uni;
+    __shared__ __int32 uni;
     if (threadIdx.x == 0)
         uni = uniforms[blockIdx.x + blockOffset];
     
-    unsigned int address = __mul24(blockIdx.x, (blockDim.x << 1)) + baseIndex + threadIdx.x; 
+	unsigned int address = __mul24(blockIdx.x, (blockDim.x << 1)) + baseIndex + threadIdx.x;
 
     __syncthreads();
     
@@ -241,22 +236,22 @@ __global__ void uniformAdd(int *g_data, int *uniforms, int n, int blockOffset, i
 }
 
 inline bool
-isPowerOfTwo(int n)
+isPowerOfTwo(__int32 n)
 {
 	return ((n&(n - 1)) == 0);
 }
 
 inline int
-floorPow2(int n)
+floorPow2(__int32 n)
 {
 #ifdef WIN32
 	// method 2
 	return 1 << (int)logb((int)n);
 #else
 	// method 1
-	// int nf = (int)n;
+	// __int32 nf = (int)n;
 	// return 1 << (((*(int*)&nf) >> 23) - 127); 
-	int exp;
+	__int32 exp;
 	frexp((int)n, &exp);
 	return 1 << (exp - 1);
 #endif
@@ -264,25 +259,20 @@ floorPow2(int n)
 
 #define BLOCK_SIZE 256
 
-int** g_scanBlockSums;
-unsigned int g_numEltsAllocated = 0;
-unsigned int g_numLevelsAllocated = 0;
-
-void preallocBlockSums(unsigned int maxNumElements)
+ScanBlockAllocation preallocBlockSums(size_t maxNumElements)
 {
-	assert(g_numEltsAllocated == 0); // shouldn't be called 
+	ScanBlockAllocation sba;
 
-	g_numEltsAllocated = maxNumElements;
+	sba.g_numEltsAllocated = maxNumElements;
 
 	unsigned int blockSize = BLOCK_SIZE; // max size of the thread blocks
 	unsigned int numElts = maxNumElements;
 
-	int level = 0;
+	__int32 level = 0;
 
 	do
 	{
-		unsigned int numBlocks =
-			max(1, (int)ceil((int)numElts / (2.f * blockSize)));
+		unsigned int numBlocks = max(1, (int)ceil((int)numElts / (2.f * blockSize)));
 		if (numBlocks > 1)
 		{
 			level++;
@@ -290,8 +280,8 @@ void preallocBlockSums(unsigned int maxNumElements)
 		numElts = numBlocks;
 	} while (numElts > 1);
 
-	g_scanBlockSums = (int**)malloc(level * sizeof(int*));
-	g_numLevelsAllocated = level;
+	sba.g_scanBlockSums = (int**)malloc(level * sizeof(__int32*));
+	sba.g_numLevelsAllocated = level;
 
 	numElts = maxNumElements;
 	level = 0;
@@ -302,28 +292,30 @@ void preallocBlockSums(unsigned int maxNumElements)
 			max(1, (int)ceil((int)numElts / (2.f * blockSize)));
 		if (numBlocks > 1)
 		{
-			cudaMalloc((void**)&g_scanBlockSums[level++], numBlocks * sizeof(int));
+			cudaMalloc((void**)&sba.g_scanBlockSums[level++], numBlocks * sizeof(__int32));
 		}
 		numElts = numBlocks;
 	} while (numElts > 1);
+
+	return sba;
 }
 
-void deallocBlockSums()
+void deallocBlockSums(ScanBlockAllocation sba)
 {
-	for (int i = 0; i < g_numLevelsAllocated; i++)
+	for (int i = 0; i < sba.g_numLevelsAllocated; i++)
 	{
-		cudaFree(g_scanBlockSums[i]);
+		cudaFree(sba.g_scanBlockSums[i]);
 	}
 
-	free((void**)g_scanBlockSums);
+	free((void**)sba.g_scanBlockSums);
 
-	g_scanBlockSums = 0;
-	g_numEltsAllocated = 0;
-	g_numLevelsAllocated = 0;
+	sba.g_scanBlockSums = 0;
+	sba.g_numEltsAllocated = 0;
+	sba.g_numLevelsAllocated = 0;
 }
 
 
-void prescanArrayRecursive(int *outArray, const int *inArray, int numElements, int level)
+void prescanArrayRecursive(__int32 *outArray, const __int32 *inArray, int numElements, int level, ScanBlockAllocation sba)
 {
 	unsigned int blockSize = BLOCK_SIZE; // max size of the thread blocks
 	unsigned int numBlocks =
@@ -356,13 +348,13 @@ void prescanArrayRecursive(int *outArray, const int *inArray, int numElements, i
 
 		unsigned int extraSpace = (2 * numThreadsLastBlock) / NUM_BANKS;
 		sharedMemLastBlock =
-			sizeof(int) * (2 * numThreadsLastBlock + extraSpace);
+			sizeof(__int32) * (2 * numThreadsLastBlock + extraSpace);
 	}
 
 	// padding space is used to avoid shared memory bank conflicts
 	unsigned int extraSpace = numEltsPerBlock / NUM_BANKS;
 	unsigned int sharedMemSize =
-		sizeof(int) * (numEltsPerBlock + extraSpace);
+		sizeof(__int32) * (numEltsPerBlock + extraSpace);
 
 #ifdef DEBUG
 	if (numBlocks > 1)
@@ -381,38 +373,24 @@ void prescanArrayRecursive(int *outArray, const int *inArray, int numElements, i
 	// execute the scan
 	if (numBlocks > 1)
 	{
-		prescan<true, false> << < grid, threads, sharedMemSize >> >(outArray,
-			inArray,
-			g_scanBlockSums[level],
-			numThreads * 2, 0, 0);
+		prescan<true, false> << < grid, threads, sharedMemSize >> >(outArray, inArray, sba.g_scanBlockSums[level], numThreads * 2, 0, 0);
 		if (np2LastBlock)
 		{
-			prescan<true, true> << < 1, numThreadsLastBlock, sharedMemLastBlock >> >
-				(outArray, inArray, g_scanBlockSums[level], numEltsLastBlock,
-				numBlocks - 1, numElements - numEltsLastBlock);
+			prescan<true, true> << < 1, numThreadsLastBlock, sharedMemLastBlock >> > (outArray, inArray, sba.g_scanBlockSums[level], numEltsLastBlock, numBlocks - 1, numElements - numEltsLastBlock);
 		}
 
 		// After scanning all the sub-blocks, we are mostly done.  But now we 
 		// need to take all of the last values of the sub-blocks and scan those.  
-		// This will give us a new value that must be sdded to each block to 
+		// This will give us a new value that must be added to each block to 
 		// get the final results.
 		// recursive (CPU) call
-		prescanArrayRecursive(g_scanBlockSums[level],
-			g_scanBlockSums[level],
-			numBlocks,
-			level + 1);
+		prescanArrayRecursive(sba.g_scanBlockSums[level], sba.g_scanBlockSums[level], numBlocks, level + 1, sba);
 
-		uniformAdd << < grid, threads >> >(outArray,
-			g_scanBlockSums[level],
-			numElements - numEltsLastBlock,
-			0, 0);
+		uniformAdd << < grid, threads >> >(outArray, sba.g_scanBlockSums[level], numElements - numEltsLastBlock, 0, 0);
+
 		if (np2LastBlock)
 		{
-			uniformAdd << < 1, numThreadsLastBlock >> >(outArray,
-				g_scanBlockSums[level],
-				numEltsLastBlock,
-				numBlocks - 1,
-				numElements - numEltsLastBlock);
+			uniformAdd << < 1, numThreadsLastBlock >> >(outArray, sba.g_scanBlockSums[level], numEltsLastBlock, numBlocks - 1, numElements - numEltsLastBlock);
 		}
 	}
 	else if (isPowerOfTwo(numElements))
@@ -425,7 +403,7 @@ void prescanArrayRecursive(int *outArray, const int *inArray, int numElements, i
 	}
 }
 
-void prescanArray(int *outArray, int *inArray, int numElements)
+void prescanArray(__int32 *outArray, __int32 *inArray, int numElements, ScanBlockAllocation sba)
 {
-	prescanArrayRecursive(outArray, inArray, numElements, 0);
+	prescanArrayRecursive(outArray, inArray, numElements, 0, sba);
 }

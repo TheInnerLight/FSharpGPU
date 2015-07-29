@@ -18,18 +18,18 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 /* Copyright © 2015 Philip Curzon */
 
-extern "C" __declspec(dllexport) int createCUDAArray(int n, int typeSize, void **devPtr);
+extern "C" __declspec(dllexport) int createCUDAArray(size_t n, size_t typeSize, void **devPtr);
 
 extern "C" __declspec(dllexport) int freeCUDAArray(void *devPtr);
 
-extern "C" __declspec(dllexport) int createCUDADoubleArray(const int arraySize, double **devPtr);
+extern "C" __declspec(dllexport) int createCUDADoubleArray(const size_t arraySize, double **devPtr);
 
-extern "C" __declspec(dllexport) int initialiseCUDADoubleArray(const double dblArray[], int n, double **devPtr);
+extern "C" __declspec(dllexport) int initialiseCUDADoubleArray(const double dblArray[], size_t n, double **devPtr);
 
-extern "C" __declspec(dllexport) int retrieveCUDADoubleArray(double *devPtr, const int offset, double dblArray[], const int n);
+extern "C" __declspec(dllexport) int retrieveCUDADoubleArray(double *devPtr, const size_t offset, double dblArray[], const size_t n);
 
-extern "C" __declspec(dllexport) int createCUDABoolArray(int n, int **devPtr);
+extern "C" __declspec(dllexport) int createCUDABoolArray(size_t n, __int32 **devPtr);
 
-extern "C" __declspec(dllexport) int initialiseCUDABoolArray(const int *array, const int n, int **devPtr);
+extern "C" __declspec(dllexport) int initialiseCUDABoolArray(const __int32 *array, const size_t n, __int32 **devPtr);
 
-extern "C" __declspec(dllexport) int retrieveCUDABoolArray(int *devPtr, const int offset, int dblArray[], const int n);
+extern "C" __declspec(dllexport) int retrieveCUDABoolArray(__int32 *devPtr, const size_t offset, __int32 dblArray[], const size_t n);

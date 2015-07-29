@@ -18,8 +18,14 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 /* Copyright © 2015 Philip Curzon */
 
-void prescanArray(int *outArray, int *inArray, int numElements);
+struct ScanBlockAllocation{
+	__int32** g_scanBlockSums;
+	size_t g_numEltsAllocated = 0;
+	size_t g_numLevelsAllocated = 0;
+};
 
-void preallocBlockSums(unsigned int maxNumElements);
+void prescanArray(__int32 *outArray, __int32 *inArray, int numElements, ScanBlockAllocation sba);
 
-void deallocBlockSums();
+ScanBlockAllocation preallocBlockSums(size_t maxNumElements);
+
+void deallocBlockSums(ScanBlockAllocation sba);

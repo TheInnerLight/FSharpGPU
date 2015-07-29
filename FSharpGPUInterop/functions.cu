@@ -30,25 +30,25 @@
 #include <algorithm>
 
 /* Create an uninitialised cuda array of length n, where each element has size typeSize */
-int createCUDAArray(int n, int typeSize, void **devPtr)
+__int32 createCUDAArray(size_t n, size_t typeSize, void **devPtr)
 {
 	cudaError_t cudaStatus;
-	int byteSize = n * typeSize;
+	__int32 byteSize = n * typeSize;
 	if ((cudaStatus = cudaMalloc(devPtr, byteSize)) != cudaSuccess) return cudaStatus;
 	return cudaStatus;
 }
 
 /* Free a cuda array */
-int freeCUDAArray(void *devPtr)
+__int32 freeCUDAArray(void *devPtr)
 {
 	return cudaFree(devPtr);
 }
 
 /* Create an uninitialised array of doubles of length n */
-int createCUDADoubleArray(int n, double **devPtr)
+__int32 createCUDADoubleArray(size_t n, double **devPtr)
 {
 	cudaError_t cudaStatus;
-	int byteSize = n * sizeof(double);
+	__int32 byteSize = n * sizeof(double);
 	if ((cudaStatus = cudaMalloc((void**)devPtr, byteSize)) != cudaSuccess) return cudaStatus;
 	return cudaStatus;
 }
@@ -56,45 +56,45 @@ int createCUDADoubleArray(int n, double **devPtr)
 
 
 /* Create and initialise array of doubles of length n */
-int initialiseCUDADoubleArray(const double *array, const int n, double **devPtr)
+__int32 initialiseCUDADoubleArray(const double *array, const size_t n, double **devPtr)
 {
 	cudaError_t cudaStatus;
-	int byteSize = n * sizeof(double);
+	__int32 byteSize = n * sizeof(double);
 	if ((cudaStatus = cudaMalloc((void**)devPtr, byteSize)) != cudaSuccess) return cudaStatus;
 	if ((cudaStatus = cudaMemcpy(*devPtr, array, byteSize, cudaMemcpyHostToDevice)) != cudaSuccess) return cudaStatus;
 	return cudaStatus;
 }
 
 /* Retreive the contents of an array of cuda doubles */
-int retrieveCUDADoubleArray(double *devPtr, const int offset, double dblArray[], const int n)
+__int32 retrieveCUDADoubleArray(double *devPtr, const size_t offset, double dblArray[], const size_t n)
 {
 	cudaError_t cudaStatus;
-	int byteSize = n * sizeof(double);
+	__int32 byteSize = n * sizeof(double);
 	if ((cudaStatus = cudaMemcpy(dblArray, devPtr+offset, byteSize, cudaMemcpyDeviceToHost)) != cudaSuccess) return cudaStatus;
 	return cudaStatus;
 }
 
-int createCUDABoolArray(int n, int **devPtr)
+__int32 createCUDABoolArray(size_t n, __int32 **devPtr)
 {
 	cudaError_t cudaStatus;
-	int byteSize = n * sizeof(int);
+	__int32 byteSize = n * sizeof(int);
 	if ((cudaStatus = cudaMalloc((void**)devPtr, byteSize)) != cudaSuccess) return cudaStatus;
 	return cudaStatus;
 }
 
-int initialiseCUDABoolArray(const int *array, const int n, int **devPtr)
+__int32 initialiseCUDABoolArray(const __int32 *array, const size_t n, __int32 **devPtr)
 {
 	cudaError_t cudaStatus;
-	int byteSize = n * sizeof(bool);
+	__int32 byteSize = n * sizeof(bool);
 	if ((cudaStatus = cudaMalloc((void**)devPtr, byteSize)) != cudaSuccess) return cudaStatus;
 	if ((cudaStatus = cudaMemcpy(*devPtr, array, byteSize, cudaMemcpyHostToDevice)) != cudaSuccess) return cudaStatus;
 	return cudaStatus;
 }
 
-int retrieveCUDABoolArray(int *devPtr, const int offset, int dblArray[], const int n)
+__int32 retrieveCUDABoolArray(__int32 *devPtr, const size_t offset, __int32 dblArray[], const size_t n)
 {
 	cudaError_t cudaStatus;
-	int byteSize = n * sizeof(int);
+	__int32 byteSize = n * sizeof(int);
 	if ((cudaStatus = cudaMemcpy(dblArray, devPtr + offset, byteSize, cudaMemcpyDeviceToHost)) != cudaSuccess) return cudaStatus;
 	return cudaStatus;
 }
