@@ -14,6 +14,8 @@ You should have received a copy of the GNU General Public License
 along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* This software contains source code provided by NVIDIA Corporation. */
+
 /* Copyright © 2015 Philip Curzon */
 
 

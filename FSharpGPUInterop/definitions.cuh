@@ -14,6 +14,8 @@
 	along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* This software contains source code provided by NVIDIA Corporation. */
+
 /*Copyright © 2015 Philip Curzon */
 
 const int MAX_BLOCKS = 65535;

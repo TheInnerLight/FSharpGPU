@@ -14,14 +14,20 @@ You should have received a copy of the GNU General Public License
 along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* This software contains source code provided by NVIDIA Corporation. */
+
 /* Copyright © 2015 Philip Curzon */
+
+
 
 #include "definitions.cuh"
 #include "kernels.cuh"
 #include "functions.cuh"
+#include "scankernels.cuh"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+
 
 #include <stdio.h>
 #include <algorithm>
@@ -44,11 +50,12 @@ ThreadBlocks getThreadsAndBlocks(const int n)
 ThreadBlocks getThreadsAndBlocks32(const int n)
 {
 	ThreadBlocks tb;
-	int reducedN = (n + 31) / 32;
-	tb.threadCount = std::min(MAX_THREADS, reducedN);
-	tb.blockCount = std::min(MAX_BLOCKS, std::max(1, (reducedN + tb.threadCount - 1) / tb.threadCount));
+	
+	tb.threadCount = std::min(MAX_THREADS, n);
+	tb.loopCount = std::min(32, std::max(1, (n + tb.threadCount - 1) / tb.threadCount));
+	int thrLoopCount = tb.loopCount * tb.threadCount;
+	tb.blockCount = std::min(MAX_BLOCKS, std::max(1, (n + thrLoopCount - 1) / thrLoopCount));
 	tb.thrBlockCount = tb.threadCount * tb.blockCount;
-	tb.loopCount = std::min(MAX_BLOCKS, std::max(1, (n + tb.thrBlockCount - 1) / tb.thrBlockCount));
 	tb.N = n;
 	return tb;
 }
@@ -522,6 +529,53 @@ __global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, 
 }
 
 /******************************************************************************************************************/
+/* int kernel reductions */
+/******************************************************************************************************************/
+
+
+
+__global__ void _kernel_iiprefixSum(int *inputArr, int n, int *outputArr)
+{
+	extern __shared__ int t1[];
+	int offset = 1;
+	t1[2 * threadIdx.x] = inputArr[2 * threadIdx.x];
+	t1[2 * threadIdx.x + 1] = inputArr[2 * threadIdx.x + 1];
+
+	for(int	d = n>>1; d > 0; d >>= 1)	// build sum in place up the tree
+	{
+		__syncthreads();
+		if (threadIdx.x < d)
+		{
+			int	ai = offset*(2 * threadIdx.x + 1) - 1;
+			int	bi = offset*(2 * threadIdx.x + 2) - 1;
+			t1[bi] += t1[ai];
+		}
+		offset *= 2;
+	}
+
+	if (threadIdx.x == 0) t1[n - 1] = 0; // clear the last element
+
+	for(int	d = 1; d < n; d *= 2)// traverse down tree & build scan
+	{
+		offset >>= 1;
+		__syncthreads();
+		if (threadIdx.x < d)
+		{
+			int	ai = offset*(2 * threadIdx.x + 1) - 1;
+			int	bi = offset*(2 * threadIdx.x + 2) - 1;
+			int t = t1[ai];
+			t1[ai] = t1[bi];
+			t1[bi] += t;
+		}
+	}
+	__syncthreads();
+	outputArr[2 * threadIdx.x] = t1[2 * threadIdx.x];
+	outputArr[2 * threadIdx.x + 1] = t1[2 * threadIdx.x + 1];
+	//printf("%d %d ", outputArr[2 * threadIdx.x], outputArr[2 * threadIdx.x + 1]);
+
+}
+
+/******************************************************************************************************************/
 /* double filters */
 /******************************************************************************************************************/
 
@@ -529,19 +583,18 @@ __global__ void _kernel_ddreduceToHalf(double *inputArr, const int inputOffset, 
 __global__ void _kernel_ddfilter(double *inputArr, int *predicateArr, const ThreadBlocks inputN, int *nres, double *outputArr)
 {
 	__shared__ int l_n;
-	//int i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	for (int iter = 0; iter < inputN.loopCount; ++iter) {
 		// zero the counter
-		if (threadIdx.x == 0)
-			l_n = 0;
+		if (threadIdx.x == 0) l_n = 0;
 		__syncthreads();
 
 		// get the values of the array and the predicate
 		double d;
 		int b, pos;
 
-		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		//int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		int i = (blockIdx.x * inputN.loopCount * inputN.threadCount) + iter * inputN.threadCount + threadIdx.x;
 
 		if (i < inputN.N) {
 			d = inputArr[i];
@@ -562,10 +615,22 @@ __global__ void _kernel_ddfilter(double *inputArr, int *predicateArr, const Thre
 			outputArr[pos] = d;
 		}
 		__syncthreads();
-
-		i += inputN.thrBlockCount;
 	}
 }
+
+/* Kernel for filtering double array based a prefix counter */
+__global__ void _kernel_ddfilterPrefix(double *inputArr, int *prefixArr, const ThreadBlocks inputN, double *outputArr)
+{
+	for (int iter = 0; iter < inputN.loopCount; ++iter) {
+		int i = (blockIdx.x * inputN.loopCount * inputN.threadCount) + iter * inputN.threadCount + threadIdx.x;
+		if (prefixArr[i] > 0 && i < inputN.N) 
+		{
+			outputArr[prefixArr[i] - 1] = inputArr[i];
+		}
+	}
+}
+
+
 
 /******************************************************************************************************************/
 /* double to double maps */
@@ -901,11 +966,17 @@ int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, do
 /* Function for filtering a double array by a boolean array predicate */
 int ddfilter(double *inputArr, int *predicateArr, const int inputN, double *outputArr, int *outputN)
 {
-	int *globalCounter;
-	cudaMalloc(&globalCounter, sizeof(int));
-	cudaMemcpy(globalCounter, outputN, sizeof(int), cudaMemcpyHostToDevice);
+	int *prefixSum;
 	ThreadBlocks tb = getThreadsAndBlocks32(inputN);
-	_kernel_ddfilter << < tb.blockCount, tb.threadCount >> >(inputArr, predicateArr, tb, globalCounter, outputArr);
-	cudaMemcpy(outputN, globalCounter, sizeof(int), cudaMemcpyDeviceToHost);
+
+	// Calculate parallel prefix sum
+	cudaMalloc(&prefixSum, inputN * sizeof(int));
+	preallocBlockSums(inputN);
+	prescanArray(prefixSum, predicateArr, inputN);
+	deallocBlockSums();
+
+	_kernel_ddfilterPrefix << < tb.blockCount, tb.threadCount >> >(inputArr, prefixSum, tb, outputArr);
+
+	cudaMemcpy(outputN, prefixSum + (inputN - 1), sizeof(int), cudaMemcpyDeviceToHost);
 	return cudaGetLastError();
 }
