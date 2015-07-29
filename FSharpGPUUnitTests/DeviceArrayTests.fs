@@ -96,3 +96,26 @@ type DevieArrayUnitTests() =
         let cpuResult1 = (array, array2) ||> Array.map2 (fun x y -> sqrt x -  y ** 11.27)
         let cudaResult1 = (cudaArray, cudaArray2) ||> DeviceArray.map2 ( fun x y -> sqrt x - y ** 11.27 ) |> Array.ofDeviceArray
         (cpuResult1, cudaResult1) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+
+    [<TestMethod>]
+    member x.FilterTests () = 
+        let rnd = Random()
+        let tolerance = 1e-9
+        // test1
+        let array = Array.init (100) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.filter (fun x -> x .>. 0.5) |> Array.ofDeviceArray
+        let cpuResult = array |> Array.filter (fun x -> x > 0.5)
+        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test2
+        let array = Array.init (100) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.filter (fun x -> x .<. 0.5) |> Array.ofDeviceArray
+        let cpuResult = array |> Array.filter (fun x -> x < 0.5)
+        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test3
+        let array = Array.init (100) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.filter (fun x -> x ** 2.0 .<. 0.5) |> Array.ofDeviceArray
+        let cpuResult = array |> Array.filter (fun x -> x ** 2.0 < 0.5)
+        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))

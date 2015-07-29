@@ -126,7 +126,7 @@ __device__ void clearLastElement(int* s_data, __int32 *g_blockSums, __int32 bloc
 {
     if (threadIdx.x == 0)
     {
-		unsigned int index = (blockDim.x << 1) - 1;
+		size_t index = (blockDim.x << 1) - 1;
         index += CONFLICT_FREE_OFFSET(index);
         
         if (storeSum) // compile-time decision
@@ -144,8 +144,8 @@ __device__ void clearLastElement(int* s_data, __int32 *g_blockSums, __int32 bloc
 
 __device__ unsigned __int32 buildSum(__int32 *s_data)
 {
-	unsigned int thid = threadIdx.x;
-    unsigned int stride = 1;
+	size_t thid = threadIdx.x;
+	size_t stride = 1;
     
     // build the sum in place up the tree
     for (__int32 d = blockDim.x; d > 0; d >>= 1)
@@ -170,9 +170,9 @@ __device__ unsigned __int32 buildSum(__int32 *s_data)
     return stride;
 }
 
-__device__ void scanRootToLeaves(__int32 *s_data, unsigned int stride)
+__device__ void scanRootToLeaves(__int32 *s_data, size_t stride)
 {
-     unsigned int thid = threadIdx.x;
+	size_t thid = threadIdx.x;
 
     // traverse down the tree building the scan in place
     for (int d = 1; d <= blockDim.x; d *= 2)
@@ -226,7 +226,7 @@ __global__ void uniformAdd(__int32 *g_data, __int32 *uniforms, int n, int blockO
     if (threadIdx.x == 0)
         uni = uniforms[blockIdx.x + blockOffset];
     
-	unsigned int address = __mul24(blockIdx.x, (blockDim.x << 1)) + baseIndex + threadIdx.x;
+	size_t address = __mul24(blockIdx.x, (blockDim.x << 1)) + baseIndex + threadIdx.x;
 
     __syncthreads();
     
@@ -265,14 +265,14 @@ ScanBlockAllocation preallocBlockSums(size_t maxNumElements)
 
 	sba.g_numEltsAllocated = maxNumElements;
 
-	unsigned int blockSize = BLOCK_SIZE; // max size of the thread blocks
-	unsigned int numElts = maxNumElements;
+	size_t blockSize = BLOCK_SIZE; // max size of the thread blocks
+	size_t numElts = maxNumElements;
 
 	__int32 level = 0;
 
 	do
 	{
-		unsigned int numBlocks = max(1, (int)ceil((int)numElts / (2.f * blockSize)));
+		size_t numBlocks = max(1, (int)ceil((int)numElts / (2.f * blockSize)));
 		if (numBlocks > 1)
 		{
 			level++;
@@ -288,7 +288,7 @@ ScanBlockAllocation preallocBlockSums(size_t maxNumElements)
 
 	do
 	{
-		unsigned int numBlocks =
+		size_t numBlocks =
 			max(1, (int)ceil((int)numElts / (2.f * blockSize)));
 		if (numBlocks > 1)
 		{
@@ -317,10 +317,10 @@ void deallocBlockSums(ScanBlockAllocation sba)
 
 void prescanArrayRecursive(__int32 *outArray, const __int32 *inArray, int numElements, int level, ScanBlockAllocation sba)
 {
-	unsigned int blockSize = BLOCK_SIZE; // max size of the thread blocks
-	unsigned int numBlocks =
+	size_t blockSize = BLOCK_SIZE; // max size of the thread blocks
+	size_t numBlocks =
 		max(1, (int)ceil((int)numElements / (2.f * blockSize)));
-	unsigned int numThreads;
+	size_t numThreads;
 
 	if (numBlocks > 1)
 		numThreads = blockSize;
@@ -329,15 +329,14 @@ void prescanArrayRecursive(__int32 *outArray, const __int32 *inArray, int numEle
 	else
 		numThreads = floorPow2(numElements);
 
-	unsigned int numEltsPerBlock = numThreads * 2;
+	size_t numEltsPerBlock = numThreads * 2;
 
 	// if this is a non-power-of-2 array, the last block will be non-full
 	// compute the smallest power of 2 able to compute its scan.
-	unsigned int numEltsLastBlock =
-		numElements - (numBlocks - 1) * numEltsPerBlock;
-	unsigned int numThreadsLastBlock = max(1, numEltsLastBlock / 2);
-	unsigned int np2LastBlock = 0;
-	unsigned int sharedMemLastBlock = 0;
+	size_t numEltsLastBlock = numElements - (numBlocks - 1) * numEltsPerBlock;
+	size_t numThreadsLastBlock = max(1, numEltsLastBlock / 2);
+	size_t np2LastBlock = 0;
+	size_t sharedMemLastBlock = 0;
 
 	if (numEltsLastBlock != numEltsPerBlock)
 	{
@@ -346,14 +345,14 @@ void prescanArrayRecursive(__int32 *outArray, const __int32 *inArray, int numEle
 		if (!isPowerOfTwo(numEltsLastBlock))
 			numThreadsLastBlock = floorPow2(numEltsLastBlock);
 
-		unsigned int extraSpace = (2 * numThreadsLastBlock) / NUM_BANKS;
+		size_t extraSpace = (2 * numThreadsLastBlock) / NUM_BANKS;
 		sharedMemLastBlock =
 			sizeof(__int32) * (2 * numThreadsLastBlock + extraSpace);
 	}
 
 	// padding space is used to avoid shared memory bank conflicts
-	unsigned int extraSpace = numEltsPerBlock / NUM_BANKS;
-	unsigned int sharedMemSize =
+	size_t extraSpace = numEltsPerBlock / NUM_BANKS;
+	size_t sharedMemSize =
 		sizeof(__int32) * (numEltsPerBlock + extraSpace);
 
 #ifdef DEBUG

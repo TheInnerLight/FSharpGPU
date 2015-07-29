@@ -982,16 +982,17 @@ int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *
 	__int32 *prefixSum;
 	int nP1 = inputN + 1; // prefix sum is one longer than array because of leading -1
 	ThreadBlocks tb = getThreadsAndBlocks(nP1);
-
-	// Calculate parallel prefix sum
+	
 	cudaMalloc(&prefixSum, nP1 * sizeof(int));
-
+	// Calculate parallel prefix sum
 	ScanBlockAllocation sba = preallocBlockSums(nP1);
 	prescanArray(prefixSum, predicateArr, nP1, sba);
 	deallocBlockSums(sba);
-
+	// filter using prefix sum
 	_kernel_ddfilterPrefix << < tb.blockCount, tb.threadCount >> >(inputArr, prefixSum, tb, outputArr);
-
+	// copy length of array
 	cudaMemcpy(outputN, prefixSum + (inputN), sizeof(int), cudaMemcpyDeviceToHost);
+	// cleanup
+	cudaFree(prefixSum);
 	return cudaGetLastError();
 }
