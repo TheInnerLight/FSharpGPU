@@ -107,6 +107,16 @@ extern "C" __declspec(dllexport) int dbmapNotEquality(double *inputArr, const in
 
 extern "C" __declspec(dllexport) int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, __int32 *outputArr);
 
+/* bool to bool maps */
+
+extern "C" __declspec(dllexport) int bbmapConditionAnd(__int32 *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
+
+extern "C" __declspec(dllexport) int bbmap2ConditionAnd(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const __int32 inputN, __int32 *outputArr);
+
+extern "C" __declspec(dllexport) int bbmapConditionOr(__int32 *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr);
+
+extern "C" __declspec(dllexport) int bbmap2ConditionOr(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const __int32 inputN, __int32 *outputArr);
+
 /* double reductions */
 
 extern "C" __declspec(dllexport) int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr);

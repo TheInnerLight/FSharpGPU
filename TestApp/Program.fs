@@ -56,7 +56,6 @@ let main argv =
         let! result2 = cudaArray |> DeviceArray.map (fun x -> (sqrt(x) / x /5.0 + 1.0/7.78)) |> Array.ofDeviceArray
         
         let! result2b = cudaArray |> DeviceArray.filter (fun x -> x .<. 100.0 ) |> Array.ofDeviceArray
-        let result2c = cudaArray |> DeviceArray.map (fun x -> x .<. 100.0 ) |> Array.ofDeviceArray
         //let! result2 = cudaArray |> CudaArray.map (fun x -> x > 5.0 ) |> Array.ofCudaArray
         let! result3 = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y ->  x * sqrt y .>. 123.5)
         let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2*l + 0.2*r)) Preserve |> Array.ofDeviceArray
@@ -68,8 +67,8 @@ let main argv =
         let! result2CPU = array |> Array.map (fun x -> sqrt(x) / x /5.0 + 1.0/7.78)
         let! result2bCPU = array |> Array.filter (fun x -> x < 100.0 )
         let! result3CPU = (array, array2) ||> Array.map2 (fun x y -> x * sqrt y > 123.5  ) 
-        printfn "..."
         let! result4CPU = array3 |> Array.reduce (fun x y -> x + y )
+        printfn "..."
         //printfn "%A" result
         //printfn "%A" resultCPU
         //printfn "%A" result2
@@ -77,7 +76,6 @@ let main argv =
         //printfn "%A" result4CPU
        // printfn "%A" result4
         //printfn "%A" result4
-        printfn "%A" result2c
         printfn "%A" result2b
         printfn "%A" result2bCPU
         printfn "%A" array

@@ -119,3 +119,15 @@ type DevieArrayUnitTests() =
         let cudaResult = cudaArray |> DeviceArray.filter (fun x -> x ** 2.0 .<. 0.5) |> Array.ofDeviceArray
         let cpuResult = array |> Array.filter (fun x -> x ** 2.0 < 0.5)
         (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test4
+        let array = Array.init (100) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.filter (fun x -> (x ** 2.0 .<. 0.25) .&&. (x .>. 0.1)) |> Array.ofDeviceArray
+        let cpuResult = array |> Array.filter (fun x -> (x ** 2.0 < 0.25) && (x > 0.1))
+        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test5
+        let array = Array.init (100) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.filter (fun x -> (x ** 2.0 .<. 0.25) .||. ((x .>. 0.7) .&&. (x .<. 0.8))) |> Array.ofDeviceArray
+        let cpuResult = array |> Array.filter (fun x -> (x ** 2.0 < 0.25) || ((x > 0.7) && (x < 0.8)))
+        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))

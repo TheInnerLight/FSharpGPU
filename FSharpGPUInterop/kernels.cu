@@ -86,6 +86,19 @@ __device__ void getInputArrayValueForIndexingScheme(int pos, double *inputArr, c
 	}
 }
 
+__device__ void getInputArrayValueForIndexingScheme(int pos, __int32 *inputArr, const int inputOffset, const int inputN, int scheme, __int32 *val)
+{
+	switch (scheme)
+	{
+	case 0:
+		if ((pos + inputOffset) >= inputN) *val = 0.0;
+		else *val = inputArr[pos + inputOffset];
+		break;
+	default:
+		*val = inputArr[(pos + inputOffset) % inputN];
+	}
+}
+
 /******************************************************************************************************************/
 /* double to double kernel maps */
 /******************************************************************************************************************/
@@ -509,6 +522,56 @@ __global__ void _kernel_dbmap2Equality(double *input1Arr, const int input1Offset
 		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
 		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = (val1 == val2) ^ not;
+	}
+}
+
+/******************************************************************************************************************/
+/* bool to bool kernel maps */
+/******************************************************************************************************************/
+
+/* Kernel for calculating elementwise conditional AND between array and constant */
+__global__ void _kernel_bbmapConditionalAnd(__int32 *inputArr, const int inputOffset, const ThreadBlocks inputN, const int d, __int32 *outputArr)
+{
+	__int32 val;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val && d;
+	}
+}
+
+/* Kernel for calculating elementwise conditional AND over two arrays */
+__global__ void _kernel_bbmap2ConditionalAnd(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
+{
+	__int32 val1, val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 && val2;
+	}
+}
+
+/* Kernel for calculating elementwise conditional AND between array and constant */
+__global__ void _kernel_bbmapConditionalOr(__int32 *inputArr, const int inputOffset, const ThreadBlocks inputN, const int d, __int32 *outputArr)
+{
+	__int32 val;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val || d;
+	}
+}
+
+/* Kernel for calculating elementwise conditional AND over two arrays */
+__global__ void _kernel_bbmap2ConditionalOr(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
+{
+	__int32 val1, val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 || val2;
 	}
 }
 
@@ -960,6 +1023,44 @@ int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2A
 	_kernel_dbmap2Equality << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, true);
 	return cudaGetLastError();
 }
+
+/******************************************************************************************************************/
+/* bool to bool kernel maps */
+/******************************************************************************************************************/
+
+/* Function for calculating elementwise conditional AND over array and constant */
+int bbmapConditionAnd(__int32 *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_bbmapConditionalAnd << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise conditional AND over two arrays */
+int bbmap2ConditionAnd(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const __int32 inputN, __int32 *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_bbmap2ConditionalAnd << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise conditional OR over array and constant */
+int bbmapConditionOr(__int32 *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_bbmapConditionalOr << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for calculating elementwise conditional OR over two arrays */
+int bbmap2ConditionOr(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const __int32 inputN, __int32 *outputArr)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(inputN);
+	_kernel_bbmap2ConditionalOr<< < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	return cudaGetLastError();
+}
+
+
 
 /******************************************************************************************************************/
 /* double reductions */

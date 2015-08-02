@@ -180,6 +180,14 @@ module private DeviceArrayOps =
             let lhs = decomposeMap lhsExpr mapArgs
             let rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapInequality lhs rhs
+        |SpecificCall <@ (.&&.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<>) Operator
+            let lhs = decomposeMap lhsExpr mapArgs
+            let rhs = decomposeMap rhsExpr mapArgs
+            GeneralDeviceKernels.mapConditionalAnd lhs rhs
+        |SpecificCall <@ (.||.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<>) Operator
+            let lhs = decomposeMap lhsExpr mapArgs
+            let rhs = decomposeMap rhsExpr mapArgs
+            GeneralDeviceKernels.mapConditionalOr lhs rhs
         // OTHER
         |_ -> failwith "Operation Not Supported."
     
