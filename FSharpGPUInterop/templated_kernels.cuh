@@ -51,6 +51,12 @@ __device__ U _kernel_divide(T elem1, T elem2)
 }
 
 template<typename T, typename U>
+__device__ U _kernel_power(T elem1, T elem2)
+{
+	return pow(elem1, elem2);
+}
+
+template<typename T, typename U>
 __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
 {
 	T val;
