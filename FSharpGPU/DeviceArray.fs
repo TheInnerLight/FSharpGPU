@@ -315,6 +315,10 @@ type Stencils =
     // A neighbour mapping stencil of the form X_i, X_(i-2), X_(i-1), X_(i+1) and X_(i+2)
     static member Stencil5 ([<ReflectedDefinition>] code : Expr<'a->'a->'a->'a->'a->'b>) =
         NeighbourMapping.Stencil5 code
+    static member ImLeft ([<ReflectedDefinition>] code : Expr<'a->'a->'b>) =
+        NeighbourMapping.ImmediateLeft code
+    static member ImRight ([<ReflectedDefinition>] code : Expr<'a->'a->'b>) =
+        NeighbourMapping.ImmediateRight code
     
 //
 // EXPOSED FUNCTIONS

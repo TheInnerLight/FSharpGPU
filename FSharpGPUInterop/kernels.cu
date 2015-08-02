@@ -24,6 +24,7 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 #include "kernels.cuh"
 #include "functions.cuh"
 #include "scankernels.cuh"
+#include "templated_kernels.cuh"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -711,74 +712,100 @@ __global__ void _kernel_iiInit(__int32 *prefixArr, const ThreadBlocks inputN, __
 /******************************************************************************************************************/
 /* double to double maps */
 /******************************************************************************************************************/
+typedef double(*dbl_func)(double, double);
+__device__ dbl_func add_kernel = _kernel_add<double, double>;
+__device__ dbl_func subtract_kernel = _kernel_subtract<double, double>;
+__device__ dbl_func multiply_kernel = _kernel_multiply<double, double>;
+__device__ dbl_func divide_kernel = _kernel_divide<double, double>;
+
 
 int ddmapAdd(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapAddSubtract << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_func add_kernel_h;
+	cudaMemcpyFromSymbol(&add_kernel_h, add_kernel, sizeof(dbl_func));
+	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, add_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmap2Add(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Add << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	dbl_func add_kernel_h;
+	cudaMemcpyFromSymbol(&add_kernel_h, add_kernel, sizeof(dbl_func));
+	_kernel_map2_op<double, double> << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, add_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmapSubtract(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapAddSubtract << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, -d, outputArr);
+	dbl_func subtract_kernel_h;
+	cudaMemcpyFromSymbol(&subtract_kernel_h, subtract_kernel, sizeof(dbl_func));
+	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, subtract_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmapSubtract2(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapSubtract2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_func subtract_kernel_h;
+	cudaMemcpyFromSymbol(&subtract_kernel_h, subtract_kernel, sizeof(dbl_func));
+	_kernel_map_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, subtract_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmap2Subtract(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Subtract << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	dbl_func subtract_kernel_h;
+	cudaMemcpyFromSymbol(&subtract_kernel_h, subtract_kernel, sizeof(dbl_func));
+	_kernel_map2_op<double, double> << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, subtract_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmapMultiply(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapMultiply << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_func multiply_kernel_h;
+	cudaMemcpyFromSymbol(&multiply_kernel_h, multiply_kernel, sizeof(dbl_func));
+	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, multiply_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmap2Multiply(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Multiply << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	dbl_func multiply_kernel_h;
+	cudaMemcpyFromSymbol(&multiply_kernel_h, multiply_kernel, sizeof(dbl_func));
+	_kernel_map2_op<double, double> << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, multiply_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmapDivide(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapDivide << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_func divide_kernel_h;
+	cudaMemcpyFromSymbol(&divide_kernel_h, divide_kernel, sizeof(dbl_func));
+	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, divide_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmapDivide2(double *inputArr, const int inputOffset, const int inputN, const double d, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmapDivide2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_func divide_kernel_h;
+	cudaMemcpyFromSymbol(&divide_kernel_h, divide_kernel, sizeof(dbl_func));
+	_kernel_map_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, divide_kernel_h);
 	return cudaGetLastError();
 }
 
 int ddmap2Divide(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddmap2Divide << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	dbl_func divide_kernel_h;
+	cudaMemcpyFromSymbol(&divide_kernel_h, divide_kernel, sizeof(dbl_func));
+	_kernel_map2_op<double, double> << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, divide_kernel_h);
 	return cudaGetLastError();
 }
 

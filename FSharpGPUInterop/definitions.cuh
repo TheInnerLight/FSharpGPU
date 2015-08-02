@@ -18,6 +18,8 @@
 
 /*Copyright © 2015 Philip Curzon */
 
+#pragma once
+
 const int MAX_BLOCKS = 65535;
 const int MAX_THREADS = 512;
 

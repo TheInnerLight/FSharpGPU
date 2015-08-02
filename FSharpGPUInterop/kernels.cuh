@@ -18,7 +18,7 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 /* Copyright © 2015 Philip Curzon */
 
-
+#pragma once
 
 /* double to double maps */
 

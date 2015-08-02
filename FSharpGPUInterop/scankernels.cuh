@@ -18,6 +18,8 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 /* Copyright © 2015 Philip Curzon */
 
+#pragma once
+
 struct ScanBlockAllocation{
 	__int32** g_scanBlockSums;
 	size_t g_numEltsAllocated = 0;
