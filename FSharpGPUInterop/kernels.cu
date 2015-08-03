@@ -240,29 +240,6 @@ __global__ void _kernel_ddmapExp(double *inputArr, const int inputOffset, const 
 /* double to bool kernel maps */
 /******************************************************************************************************************/
 
-/* Kernel for calculating elementwise greater than value over constant and array */
-__global__ void _kernel_dbmapGT(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
-{
-	double val;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val > d;
-	}
-}
-
-/* Kernel for calculating elementwise greater than value over array and constant */
-__global__ void _kernel_dbmapGT2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
-{
-
-	double val;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = d > val;
-	}
-}
-
 /* Kernel for calculating elementwise greater than value over two arrays */
 __global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
 {
@@ -274,29 +251,6 @@ __global__ void _kernel_dbmap2GT(double *input1Arr, const int input1Offset, doub
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 > val2;
 	}
 }
-
-/* Kernel for calculating elementwise greater than or equal value over constant and array */
-__global__ void _kernel_dbmapGTE(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
-{
-	double val;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val >= d;
-	}
-}
-
-/* Kernel for calculating elementwise greater than or equal value over array and constant */
-__global__ void _kernel_dbmapGTE2(double *inputArr, const int inputOffset, const ThreadBlocks inputN, const double d, __int32 *outputArr)
-{
-	double val;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = d >= val;
-	}
-}
-
 
 /* Kernel for calculating elementwise greater than or equal value over two arrays */
 __global__ void _kernel_dbmap2GTE(double *input1Arr, const int input1Offset, double *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
@@ -592,11 +546,18 @@ __global__ void _kernel_iiInit(__int32 *prefixArr, const ThreadBlocks inputN, __
 // Declarations of generic device functions
 
 typedef double(*dbl_func)(double, double);
+typedef __int32(*dbl_int32_func)(double, double);
+// arithmetic functions
 __device__ dbl_func add_kernel = _kernel_add<double, double>;
 __device__ dbl_func subtract_kernel = _kernel_subtract<double, double>;
 __device__ dbl_func multiply_kernel = _kernel_multiply<double, double>;
 __device__ dbl_func divide_kernel = _kernel_divide<double, double>;
 __device__ dbl_func power_kernel = _kernel_power<double, double>;
+// comparison functions
+__device__ dbl_int32_func greater_than_kernel = _kernel_greater_than<double, __int32>;
+__device__ dbl_int32_func greater_than_or_equal_kernel = _kernel_greater_than_or_equal<double, __int32>;
+__device__ dbl_int32_func less_than_kernel = _kernel_less_than<double, __int32>;
+__device__ dbl_int32_func less_than_or_equal_kernel = _kernel_less_than_or_equal<double, __int32>;
 
 // _kernel_map_op is for applying functions to an array and a fixed value
 // _kernel_map_op2 is for non-commutative functions and has the opposite ordering to _kernel_map_op
@@ -829,7 +790,9 @@ int ddmapLog10(double *inputArr, const int inputOffset, const int inputN, double
 int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmapGT << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_int32_func greater_than_kernel_h;
+	cudaMemcpyFromSymbol(&greater_than_kernel_h, greater_than_kernel, sizeof(dbl_int32_func));
+	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -837,7 +800,9 @@ int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const dou
 int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmapGT2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_int32_func greater_than_kernel_h;
+	cudaMemcpyFromSymbol(&greater_than_kernel_h, greater_than_kernel, sizeof(dbl_int32_func));
+	_kernel_map_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -853,7 +818,9 @@ int dbmap2GT(double *input1Arr, const int input1Offset, double *input2Arr, const
 int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmapGTE << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_int32_func greater_than_or_equal_kernel_h;
+	cudaMemcpyFromSymbol(&greater_than_or_equal_kernel_h, greater_than_or_equal_kernel, sizeof(dbl_int32_func));
+	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_or_equal_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -861,7 +828,9 @@ int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const do
 int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_dbmapGTE2 << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	dbl_int32_func greater_than_or_equal_kernel_h;
+	cudaMemcpyFromSymbol(&greater_than_or_equal_kernel_h, greater_than_or_equal_kernel, sizeof(dbl_int32_func));
+	_kernel_map_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_or_equal_kernel_h);
 	return cudaGetLastError();
 }
 

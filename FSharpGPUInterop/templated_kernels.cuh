@@ -46,35 +46,36 @@ __device__ void getInputArrayValueForIndexingScheme1000(int pos, T *inputArr, co
 	}
 }
 
-template<typename T, typename U>
-__device__ U _kernel_add(T elem1, T elem2)
-{
-	return elem1 + elem2;
-}
+// arthimetic functions
 
 template<typename T, typename U>
-__device__ U _kernel_subtract(T elem1, T elem2)
-{
-	return elem1 - elem2;
-}
+__device__ U _kernel_add(T elem1, T elem2) { return elem1 + elem2; }
 
 template<typename T, typename U>
-__device__ U _kernel_multiply(T elem1, T elem2)
-{
-	return elem1 * elem2;
-}
+__device__ U _kernel_subtract(T elem1, T elem2) { return elem1 - elem2; }
 
 template<typename T, typename U>
-__device__ U _kernel_divide(T elem1, T elem2)
-{
-	return elem1 / elem2;
-}
+__device__ U _kernel_multiply(T elem1, T elem2) { return elem1 * elem2; }
 
 template<typename T, typename U>
-__device__ U _kernel_power(T elem1, T elem2)
-{
-	return pow(elem1, elem2);
-}
+__device__ U _kernel_divide(T elem1, T elem2) {	return elem1 / elem2; }
+
+template<typename T, typename U>
+__device__ U _kernel_power(T elem1, T elem2) { return pow(elem1, elem2); }
+
+// comparison functions
+
+template<typename T, typename U>
+__device__ U _kernel_greater_than(T elem1, T elem2) { return elem1 > elem2; }
+
+template<typename T, typename U>
+__device__ U _kernel_greater_than_or_equal(T elem1, T elem2) { return elem1 >= elem2; }
+
+template<typename T, typename U>
+__device__ U _kernel_less_than(T elem1, T elem2) { return elem1 < elem2; }
+
+template<typename T, typename U>
+__device__ U _kernel_less_than_or_equal(T elem1, T elem2) {	return elem1 <= elem2; }
 
 template<typename T, typename U>
 __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
@@ -89,7 +90,7 @@ __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadB
 }
 
 template<typename T, typename U>
-__global__ void _kernel_map_op2(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, T *outputArr, U p_function(T, T))
+__global__ void _kernel_map_op2(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
 {
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
