@@ -49,36 +49,44 @@ __device__ void getInputArrayValueForIndexingScheme1000(int pos, T *inputArr, co
 // arthimetic functions
 
 template<typename T, typename U> __device__ U _kernel_add(T elem1, T elem2) { return elem1 + elem2; }
-
 template<typename T, typename U> __device__ U _kernel_subtract(T elem1, T elem2) { return elem1 - elem2; }
-
 template<typename T, typename U> __device__ U _kernel_multiply(T elem1, T elem2) { return elem1 * elem2; }
-
 template<typename T, typename U> __device__ U _kernel_divide(T elem1, T elem2) { return elem1 / elem2; }
-
 template<typename T, typename U> __device__ U _kernel_power(T elem1, T elem2) { return pow(elem1, elem2); }
 
 // comparison functions
 
 template<typename T> __device__ __int32 _kernel_greater_than(T elem1, T elem2) { return elem1 > elem2; }
-
 template<typename T> __device__ __int32 _kernel_greater_than_or_equal(T elem1, T elem2) { return elem1 >= elem2; }
-
 template<typename T> __device__ __int32 _kernel_less_than(T elem1, T elem2) { return elem1 < elem2; }
-
 template<typename T> __device__ __int32 _kernel_less_than_or_equal(T elem1, T elem2) { return elem1 <= elem2; }
 
 // equality functions
 
 template<typename T> __device__ __int32 _kernel_equality(T elem1, T elem2) { return elem1 == elem2; }
-
 template<typename T> __device__ __int32 _kernel_inequality(T elem1, T elem2) { return elem1 != elem2; }
 
 // conditional functions
 
 __device__ __int32 _kernel_conditional_and(__int32 elem1, __int32 elem2) { return elem1 && elem2; }
-
 __device__ __int32 _kernel_conditional_or(__int32 elem1, __int32 elem2) { return elem1 || elem2; }
+
+// maths functions
+
+template<typename T, typename U> __device__ U _kernel_sqrt(T elem) { return sqrt(elem); }
+template<typename T, typename U> __device__ U _kernel_sin(T elem) { return sin(elem); }
+template<typename T, typename U> __device__ U _kernel_cos(T elem) { return cos(elem); }
+template<typename T, typename U> __device__ U _kernel_tan(T elem) { return tan(elem); }
+template<typename T, typename U> __device__ U _kernel_sinh(T elem) { return sinh(elem); }
+template<typename T, typename U> __device__ U _kernel_cosh(T elem) { return cosh(elem); }
+template<typename T, typename U> __device__ U _kernel_tanh(T elem) { return tanh(elem); }
+template<typename T, typename U> __device__ U _kernel_arcsin(T elem) { return asin(elem); }
+template<typename T, typename U> __device__ U _kernel_arccos(T elem) { return acos(elem); }
+template<typename T, typename U> __device__ U _kernel_arctan(T elem) { return atan(elem); }
+template<typename T, typename U> __device__ U _kernel_log(T elem) { return log(elem); }
+template<typename T, typename U> __device__ U _kernel_log10(T elem) { return log10(elem); }
+template<typename T, typename U> __device__ U _kernel_exp(T elem) { return exp(elem); }
+
 
 template<typename T, typename U>
 __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, U *outputArr, U p_function(T))
