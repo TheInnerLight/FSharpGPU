@@ -18,8 +18,6 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 /* Copyright © 2015 Philip Curzon */
 
-
-
 #include "definitions.cuh"
 #include "kernels.cuh"
 #include "functions.cuh"
@@ -29,11 +27,8 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-
 #include <stdio.h>
 #include <algorithm>
-
-
 
 /* Split the size of the array between threads and blocks */
 ThreadBlocks getThreadsAndBlocks(const int n)
@@ -236,55 +231,6 @@ __global__ void _kernel_ddmapExp(double *inputArr, const int inputOffset, const 
 	}
 }
 
-/******************************************************************************************************************/
-/* bool to bool kernel maps */
-/******************************************************************************************************************/
-
-/* Kernel for calculating elementwise conditional AND between array and constant */
-__global__ void _kernel_bbmapConditionalAnd(__int32 *inputArr, const int inputOffset, const ThreadBlocks inputN, const int d, __int32 *outputArr)
-{
-	__int32 val;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val && d;
-	}
-}
-
-/* Kernel for calculating elementwise conditional AND over two arrays */
-__global__ void _kernel_bbmap2ConditionalAnd(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
-{
-	__int32 val1, val2;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 && val2;
-	}
-}
-
-/* Kernel for calculating elementwise conditional AND between array and constant */
-__global__ void _kernel_bbmapConditionalOr(__int32 *inputArr, const int inputOffset, const ThreadBlocks inputN, const int d, __int32 *outputArr)
-{
-	__int32 val;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val || d;
-	}
-}
-
-/* Kernel for calculating elementwise conditional AND over two arrays */
-__global__ void _kernel_bbmap2ConditionalOr(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const ThreadBlocks inputN, __int32 *outputArr)
-{
-	__int32 val1, val2;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = val1 || val2;
-	}
-}
 
 /******************************************************************************************************************/
 /* double kernel reductions */
@@ -300,53 +246,6 @@ __global__ void _kernel_ddreduceToHalf(double *inputArr, const __int32 inputOffs
 		if ((i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) % 2 == 0)
 			outputArr[(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) / 2] = val;
 	}
-}
-
-/******************************************************************************************************************/
-/* __int32 kernel reductions */
-/******************************************************************************************************************/
-
-
-
-__global__ void _kernel_iiprefixSum(__int32 *inputArr, int n, __int32 *outputArr)
-{
-	extern __shared__ __int32 t1[];
-	__int32 offset = 1;
-	t1[2 * threadIdx.x] = inputArr[2 * threadIdx.x];
-	t1[2 * threadIdx.x + 1] = inputArr[2 * threadIdx.x + 1];
-
-	for(int	d = n>>1; d > 0; d >>= 1)	// build sum in place up the tree
-	{
-		__syncthreads();
-		if (threadIdx.x < d)
-		{
-			int	ai = offset*(2 * threadIdx.x + 1) - 1;
-			int	bi = offset*(2 * threadIdx.x + 2) - 1;
-			t1[bi] += t1[ai];
-		}
-		offset *= 2;
-	}
-
-	if (threadIdx.x == 0) t1[n - 1] = 0; // clear the last element
-
-	for(int	d = 1; d < n; d *= 2)// traverse down tree & build scan
-	{
-		offset >>= 1;
-		__syncthreads();
-		if (threadIdx.x < d)
-		{
-			int	ai = offset*(2 * threadIdx.x + 1) - 1;
-			int	bi = offset*(2 * threadIdx.x + 2) - 1;
-			__int32 t = t1[ai];
-			t1[ai] = t1[bi];
-			t1[bi] += t;
-		}
-	}
-	__syncthreads();
-	outputArr[2 * threadIdx.x] = t1[2 * threadIdx.x];
-	outputArr[2 * threadIdx.x + 1] = t1[2 * threadIdx.x + 1];
-	//printf("%d %d ", outputArr[2 * threadIdx.x], outputArr[2 * threadIdx.x + 1]);
-
 }
 
 /******************************************************************************************************************/
@@ -427,6 +326,7 @@ __global__ void _kernel_iiInit(__int32 *prefixArr, const ThreadBlocks inputN, __
 
 typedef double(*dbl_func)(double, double);
 typedef __int32(*dbl_int32_func)(double, double);
+typedef __int32(*int32_int32_func)(__int32, __int32);
 // arithmetic functions
 __device__ dbl_func add_kernel = _kernel_add<double, double>;
 __device__ dbl_func subtract_kernel = _kernel_subtract<double, double>;
@@ -441,9 +341,12 @@ __device__ dbl_int32_func less_than_or_equal_kernel = _kernel_less_than_or_equal
 // equality funcitons
 __device__ dbl_int32_func equality_kernel = _kernel_equality<double>;
 __device__ dbl_int32_func inequality_kernel = _kernel_inequality<double>;
+// conditional functions
+__device__ int32_int32_func conditional_and_kernel = _kernel_conditional_and;
+__device__ int32_int32_func conditional_or_kernel = _kernel_conditional_or;
 
-// _kernel_map_op is for applying functions to an array and a fixed value
-// _kernel_map_op2 is for non-commutative functions and has the opposite ordering to _kernel_map_op
+// _kernel_map_with_const_op is for applying functions to an array and a fixed value
+// _kernel_map_with_const_op2 is for non-commutative functions and has the opposite ordering to _kernel_map_with_const_op
 // _kernel_map2_op is for applying function which takes two array elements as arguments
 
 /* Function for adding an array to a constant */
@@ -452,7 +355,7 @@ int ddmapAdd(double *inputArr, const int inputOffset, const int inputN, const do
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func add_kernel_h;
 	cudaMemcpyFromSymbol(&add_kernel_h, add_kernel, sizeof(dbl_func));
-	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, add_kernel_h);
+	_kernel_map_with_const_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, add_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -472,7 +375,7 @@ int ddmapSubtract(double *inputArr, const int inputOffset, const int inputN, con
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func subtract_kernel_h;
 	cudaMemcpyFromSymbol(&subtract_kernel_h, subtract_kernel, sizeof(dbl_func));
-	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, subtract_kernel_h);
+	_kernel_map_with_const_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, subtract_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -482,7 +385,7 @@ int ddmapSubtract2(double *inputArr, const int inputOffset, const int inputN, co
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func subtract_kernel_h;
 	cudaMemcpyFromSymbol(&subtract_kernel_h, subtract_kernel, sizeof(dbl_func));
-	_kernel_map_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, subtract_kernel_h);
+	_kernel_map_with_const_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, subtract_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -502,7 +405,7 @@ int ddmapMultiply(double *inputArr, const int inputOffset, const int inputN, con
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func multiply_kernel_h;
 	cudaMemcpyFromSymbol(&multiply_kernel_h, multiply_kernel, sizeof(dbl_func));
-	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, multiply_kernel_h);
+	_kernel_map_with_const_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, multiply_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -522,7 +425,7 @@ int ddmapDivide(double *inputArr, const int inputOffset, const int inputN, const
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func divide_kernel_h;
 	cudaMemcpyFromSymbol(&divide_kernel_h, divide_kernel, sizeof(dbl_func));
-	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, divide_kernel_h);
+	_kernel_map_with_const_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, divide_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -532,7 +435,7 @@ int ddmapDivide2(double *inputArr, const int inputOffset, const int inputN, cons
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func divide_kernel_h;
 	cudaMemcpyFromSymbol(&divide_kernel_h, divide_kernel, sizeof(dbl_func));
-	_kernel_map_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, divide_kernel_h);
+	_kernel_map_with_const_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, divide_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -552,7 +455,7 @@ __int32 ddmapPower(double *inputArr, const int inputOffset, const int inputN, co
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func power_kernel_h;
 	cudaMemcpyFromSymbol(&power_kernel_h, power_kernel, sizeof(dbl_func));
-	_kernel_map_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, power_kernel_h);
+	_kernel_map_with_const_op<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, power_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -562,7 +465,7 @@ int ddmapPower2(double *inputArr, const int inputOffset, const int inputN, const
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_func power_kernel_h;
 	cudaMemcpyFromSymbol(&power_kernel_h, power_kernel, sizeof(dbl_func));
-	_kernel_map_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, power_kernel_h);
+	_kernel_map_with_const_op2<double, double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, power_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -675,7 +578,7 @@ int dbmapGT(double *inputArr, const int inputOffset, const int inputN, const dou
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func greater_than_kernel_h;
 	cudaMemcpyFromSymbol(&greater_than_kernel_h, greater_than_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_kernel_h);
+	_kernel_map_with_const_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -685,7 +588,7 @@ int dbmapGT2(double *inputArr, const int inputOffset, const int inputN, const do
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func greater_than_kernel_h;
 	cudaMemcpyFromSymbol(&greater_than_kernel_h, greater_than_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_kernel_h);
+	_kernel_map_with_const_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -705,7 +608,7 @@ int dbmapGTE(double *inputArr, const int inputOffset, const int inputN, const do
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func greater_than_or_equal_kernel_h;
 	cudaMemcpyFromSymbol(&greater_than_or_equal_kernel_h, greater_than_or_equal_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_or_equal_kernel_h);
+	_kernel_map_with_const_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_or_equal_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -715,7 +618,7 @@ int dbmapGTE2(double *inputArr, const int inputOffset, const int inputN, const d
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func greater_than_or_equal_kernel_h;
 	cudaMemcpyFromSymbol(&greater_than_or_equal_kernel_h, greater_than_or_equal_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_or_equal_kernel_h);
+	_kernel_map_with_const_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, greater_than_or_equal_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -735,7 +638,7 @@ int dbmapLT(double *inputArr, const int inputOffset, const int inputN, const dou
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func less_than_kernel_h;
 	cudaMemcpyFromSymbol(&less_than_kernel_h, less_than_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_h);
+	_kernel_map_with_const_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -745,7 +648,7 @@ int dbmapLT2(double *inputArr, const int inputOffset, const int inputN, const do
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func less_than_kernel_h;
 	cudaMemcpyFromSymbol(&less_than_kernel_h, less_than_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_h);
+	_kernel_map_with_const_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -765,7 +668,7 @@ __int32 dbmapLTE(double *inputArr, const int inputOffset, const int inputN, cons
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func less_than_kernel_or_equal_h;
 	cudaMemcpyFromSymbol(&less_than_kernel_or_equal_h, less_than_or_equal_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_or_equal_h);
+	_kernel_map_with_const_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_or_equal_h);
 	return cudaGetLastError();
 }
 
@@ -775,7 +678,7 @@ int dbmapLTE2(double *inputArr, const int inputOffset, const int inputN, const d
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func less_than_kernel_or_equal_h;
 	cudaMemcpyFromSymbol(&less_than_kernel_or_equal_h, less_than_or_equal_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_or_equal_h);
+	_kernel_map_with_const_op2<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, less_than_kernel_or_equal_h);
 	return cudaGetLastError();
 }
 
@@ -795,7 +698,7 @@ int dbmapEquality(double *inputArr, const int inputOffset, const int inputN, con
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func equality_kernel_h;
 	cudaMemcpyFromSymbol(&equality_kernel_h, equality_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, equality_kernel_h);
+	_kernel_map_with_const_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, equality_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -815,7 +718,7 @@ int dbmapNotEquality(double *inputArr, const int inputOffset, const int inputN, 
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	dbl_int32_func inequality_kernel_h;
 	cudaMemcpyFromSymbol(&inequality_kernel_h, inequality_kernel, sizeof(dbl_int32_func));
-	_kernel_map_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, inequality_kernel_h);
+	_kernel_map_with_const_op<double, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, inequality_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -837,7 +740,9 @@ int dbmap2NotEquality(double *input1Arr, const int input1Offset, double *input2A
 int bbmapConditionAnd(__int32 *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_bbmapConditionalAnd << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	int32_int32_func conditional_and_kernel_h;
+	cudaMemcpyFromSymbol(&conditional_and_kernel_h, conditional_and_kernel, sizeof(int32_int32_func));
+	_kernel_map_with_const_op<__int32, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, conditional_and_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -845,7 +750,9 @@ int bbmapConditionAnd(__int32 *inputArr, const int inputOffset, const int inputN
 int bbmap2ConditionAnd(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const __int32 inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_bbmap2ConditionalAnd << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	int32_int32_func conditional_and_kernel_h;
+	cudaMemcpyFromSymbol(&conditional_and_kernel_h, conditional_and_kernel, sizeof(int32_int32_func));
+	_kernel_map2_op<__int32, __int32> << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, conditional_and_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -853,7 +760,9 @@ int bbmap2ConditionAnd(__int32 *input1Arr, const int input1Offset, __int32 *inpu
 int bbmapConditionOr(__int32 *inputArr, const int inputOffset, const int inputN, const double d, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_bbmapConditionalOr << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr);
+	int32_int32_func conditional_or_kernel_h;
+	cudaMemcpyFromSymbol(&conditional_or_kernel_h, conditional_or_kernel, sizeof(int32_int32_func));
+	_kernel_map_with_const_op<__int32, __int32> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, d, outputArr, conditional_or_kernel_h);
 	return cudaGetLastError();
 }
 
@@ -861,7 +770,9 @@ int bbmapConditionOr(__int32 *inputArr, const int inputOffset, const int inputN,
 int bbmap2ConditionOr(__int32 *input1Arr, const int input1Offset, __int32 *input2Arr, const int input2Offset, const __int32 inputN, __int32 *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_bbmap2ConditionalOr<< < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr);
+	int32_int32_func conditional_or_kernel_h;
+	cudaMemcpyFromSymbol(&conditional_or_kernel_h, conditional_or_kernel, sizeof(int32_int32_func));
+	_kernel_map2_op<__int32, __int32> << < tb.blockCount, tb.threadCount >> >(input1Arr, input1Offset, input2Arr, input2Offset, tb, outputArr, conditional_or_kernel_h);
 	return cudaGetLastError();
 }
 

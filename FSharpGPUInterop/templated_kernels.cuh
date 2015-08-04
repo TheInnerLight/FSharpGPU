@@ -48,55 +48,62 @@ __device__ void getInputArrayValueForIndexingScheme1000(int pos, T *inputArr, co
 
 // arthimetic functions
 
-template<typename T, typename U>
-__device__ U _kernel_add(T elem1, T elem2) { return elem1 + elem2; }
+template<typename T, typename U> __device__ U _kernel_add(T elem1, T elem2) { return elem1 + elem2; }
 
-template<typename T, typename U>
-__device__ U _kernel_subtract(T elem1, T elem2) { return elem1 - elem2; }
+template<typename T, typename U> __device__ U _kernel_subtract(T elem1, T elem2) { return elem1 - elem2; }
 
-template<typename T, typename U>
-__device__ U _kernel_multiply(T elem1, T elem2) { return elem1 * elem2; }
+template<typename T, typename U> __device__ U _kernel_multiply(T elem1, T elem2) { return elem1 * elem2; }
 
-template<typename T, typename U>
-__device__ U _kernel_divide(T elem1, T elem2) {	return elem1 / elem2; }
+template<typename T, typename U> __device__ U _kernel_divide(T elem1, T elem2) { return elem1 / elem2; }
 
-template<typename T, typename U>
-__device__ U _kernel_power(T elem1, T elem2) { return pow(elem1, elem2); }
+template<typename T, typename U> __device__ U _kernel_power(T elem1, T elem2) { return pow(elem1, elem2); }
 
 // comparison functions
 
-template<typename T>
-__device__ __int32 _kernel_greater_than(T elem1, T elem2) { return elem1 > elem2; }
+template<typename T> __device__ __int32 _kernel_greater_than(T elem1, T elem2) { return elem1 > elem2; }
 
-template<typename T>
-__device__ __int32 _kernel_greater_than_or_equal(T elem1, T elem2) { return elem1 >= elem2; }
+template<typename T> __device__ __int32 _kernel_greater_than_or_equal(T elem1, T elem2) { return elem1 >= elem2; }
 
-template<typename T>
-__device__ __int32 _kernel_less_than(T elem1, T elem2) { return elem1 < elem2; }
+template<typename T> __device__ __int32 _kernel_less_than(T elem1, T elem2) { return elem1 < elem2; }
 
-template<typename T>
-__device__ __int32 _kernel_less_than_or_equal(T elem1, T elem2) { return elem1 <= elem2; }
+template<typename T> __device__ __int32 _kernel_less_than_or_equal(T elem1, T elem2) { return elem1 <= elem2; }
 
-template<typename T>
-__device__ __int32 _kernel_equality(T elem1, T elem2) { return elem1 == elem2; }
+// equality functions
 
-template<typename T>
-__device__ __int32 _kernel_inequality(T elem1, T elem2) { return elem1 != elem2; }
+template<typename T> __device__ __int32 _kernel_equality(T elem1, T elem2) { return elem1 == elem2; }
+
+template<typename T> __device__ __int32 _kernel_inequality(T elem1, T elem2) { return elem1 != elem2; }
+
+// conditional functions
+
+__device__ __int32 _kernel_conditional_and(__int32 elem1, __int32 elem2) { return elem1 && elem2; }
+
+__device__ __int32 _kernel_conditional_or(__int32 elem1, __int32 elem2) { return elem1 || elem2; }
 
 template<typename T, typename U>
-__global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
+__global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, U *outputArr, U p_function(T))
 {
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
 		getInputArrayValueForIndexingScheme1000<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		U newVal = p_function(val, d);
+		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val);
+	}
+}
+
+template<typename T, typename U>
+__global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
+{
+	T val;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme1000<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val, d);
 	}
 }
 
 template<typename T, typename U>
-__global__ void _kernel_map_op2(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
+__global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
 {
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
