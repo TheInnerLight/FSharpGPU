@@ -76,7 +76,7 @@
 //
 
 template <bool isNP2>
-__device__ void loadSharedChunkFromMem(__int32 *s_data, const __int32 *g_idata, __int32 n, __int32 baseIndex, int& ai, int& bi, int& mem_ai, int& mem_bi, int& bankOffsetA, int& bankOffsetB)
+__device__ void loadSharedChunkFromMem(__int32 *s_data, const __int32 *g_idata, int n, int baseIndex, int& ai, int& bi, int& mem_ai, int& mem_bi, int& bankOffsetA, int& bankOffsetB)
 {
     __int32 thid = threadIdx.x;
     mem_ai = baseIndex + threadIdx.x;
@@ -104,7 +104,7 @@ __device__ void loadSharedChunkFromMem(__int32 *s_data, const __int32 *g_idata, 
 }
 
 template <bool isNP2>
-__device__ void storeSharedChunkToMem(int* g_odata, const int* s_data, __int32 n, __int32 ai, __int32 bi, __int32 mem_ai, __int32 mem_bi, __int32 bankOffsetA, __int32 bankOffsetB)
+__device__ void storeSharedChunkToMem(__int32* g_odata, const __int32* s_data, int n, int ai, int bi, int mem_ai, int mem_bi, int bankOffsetA, int bankOffsetB)
 {
     __syncthreads();
 
@@ -122,7 +122,7 @@ __device__ void storeSharedChunkToMem(int* g_odata, const int* s_data, __int32 n
 }
 
 template <bool storeSum>
-__device__ void clearLastElement(int* s_data, __int32 *g_blockSums, __int32 blockIndex)
+__device__ void clearLastElement(__int32* s_data, __int32 *g_blockSums, int blockIndex)
 {
     if (threadIdx.x == 0)
     {
@@ -148,15 +148,15 @@ __device__ unsigned __int32 buildSum(__int32 *s_data)
 	size_t stride = 1;
     
     // build the sum in place up the tree
-    for (__int32 d = blockDim.x; d > 0; d >>= 1)
+    for (int d = blockDim.x; d > 0; d >>= 1)
     {
         __syncthreads();
 
         if (thid < d)      
         {
-            __int32 i  = __mul24(__mul24(2, stride), thid);
-            __int32 ai = i + stride - 1;
-            __int32 bi = ai + stride;
+			int i = __mul24(__mul24(2, stride), thid);
+			int ai = i + stride - 1;
+			int bi = ai + stride;
 
             ai += CONFLICT_FREE_OFFSET(ai);
             bi += CONFLICT_FREE_OFFSET(bi);
@@ -236,13 +236,13 @@ __global__ void uniformAdd(__int32 *g_data, __int32 *uniforms, int n, int blockO
 }
 
 inline bool
-isPowerOfTwo(__int32 n)
+isPowerOfTwo(int n)
 {
 	return ((n&(n - 1)) == 0);
 }
 
 inline int
-floorPow2(__int32 n)
+floorPow2(int n)
 {
 #ifdef WIN32
 	// method 2
@@ -280,7 +280,7 @@ ScanBlockAllocation preallocBlockSums(size_t maxNumElements)
 		numElts = numBlocks;
 	} while (numElts > 1);
 
-	sba.g_scanBlockSums = (int**)malloc(level * sizeof(__int32*));
+	sba.g_scanBlockSums = (__int32**)malloc(level * sizeof(__int32*));
 	sba.g_numLevelsAllocated = level;
 
 	numElts = maxNumElements;
