@@ -38,10 +38,10 @@ type TimerBuilder() =
 
 [<EntryPoint>]
 let main argv = 
-    let array = Array.init (5000000) (fun i -> float i + 1.0)
+    let array = Array.init (15000000) (fun i -> float i + 1.0)
     //let array = Array.init (5000000) (fun i -> float i + 1.0)
-    let array2 = Array.init (5000000) (fun i -> float (i*2))
-    let array3 = Array.init 1000000 (fun i-> float i)
+    let array2 = Array.init (15000000) (fun i -> float (i*2))
+    let array3 = Array.init 15000000 (fun i-> float i)
 
     let timer = TimerBuilder();
     timer{
@@ -62,7 +62,7 @@ let main argv =
         //let! result3a = cudaArray |> DeviceArray.map (fun x -> x) |> Array.ofDeviceArray
         //let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2 * l + 0.2 * r)) Preserve |> Array.ofDeviceArray
         //let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2*l + 0.2*r)) Preserve |> Array.ofDeviceArray
-        let! result4 = cudaArray3 |> DeviceArray.associativeReduce (fun x y ->  x + y )
+        //let! result4 = cudaArray3 |> DeviceArray.associativeReduce (fun x y ->  x + y )
         printfn ""
         printfn "CPU"
         printfn ""

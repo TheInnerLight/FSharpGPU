@@ -83,110 +83,110 @@ module private DeviceArrayOps =
             mapArgs.[var]
         // SIMPLE OPERATORS
         |SpecificCall <@ (+) @> (_, _, [lhsExpr; rhsExpr]) -> // (+) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapAdd lhs rhs
         |SpecificCall <@ (-) @> (_, _, [lhsExpr; rhsExpr]) -> // (-) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapSubtract lhs rhs
         |SpecificCall <@ (*) @> (_, _, [lhsExpr; rhsExpr]) -> // (*) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapMultiply lhs rhs
         |SpecificCall <@ (/) @> (_, _, [lhsExpr; rhsExpr]) -> // (/) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapDivide lhs rhs
         |SpecificCall <@ ( ** ) @> (_, _, [lhsExpr; rhsExpr]) -> // (**) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapPower lhs rhs
         |SpecificCall <@ sqrt @> (_, _, [expr]) -> // sqrt function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapSqrt internalExpr
         // TRIG FUNCTIONS
         |SpecificCall <@ cos @> (_, _, [expr]) -> // cos function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapCos internalExpr
         |SpecificCall <@ sin @> (_, _, [expr]) -> // sin function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapSin internalExpr
         |SpecificCall <@ tan @> (_, _, [expr]) -> // tan function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapTan internalExpr
         // HYPERBOLIC FUNCTIONS
         |SpecificCall <@ cosh @> (_, _, [expr]) -> // cosh function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapCosh internalExpr
         |SpecificCall <@ sinh @> (_, _, [expr]) -> // sinh function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapSinh internalExpr
         |SpecificCall <@ tanh @> (_, _, [expr]) -> // tanh function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapTanh internalExpr
         // INVERSE TRIG FUNCTIONS
         |SpecificCall <@ acos @> (_, _, [expr]) -> // acos function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapArcCos internalExpr
         |SpecificCall <@ asin @> (_, _, [expr]) -> // asin function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapArcSin internalExpr
         |SpecificCall <@ atan @> (_, _, [expr]) -> // tanh function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapArcTan internalExpr
         // LOG AND EXPONENTIAL FUNCTIONS
         |SpecificCall <@ log @> (_, _, [expr]) -> // log function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapLog internalExpr
         |SpecificCall <@ log10 @> (_, _, [expr]) -> // log10 function
-            let internalExpr = decomposeMap expr mapArgs
+            use internalExpr = decomposeMap expr mapArgs
             GeneralDeviceKernels.mapLog10 internalExpr
          // COMPARISON OPERATORS
         |SpecificCall <@ (.>.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr])
         |SpecificCall <@ (.>.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr])
         |SpecificCall <@ (.>.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr])
             -> // (>) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapGreaterThan lhs rhs
         |SpecificCall <@ (.>=.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
         |SpecificCall <@ (.>=.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
         |SpecificCall <@ (.>=.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
             -> // (>=) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapGreaterThanOrEqual lhs rhs
         |SpecificCall <@ (.<.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
         |SpecificCall <@ (.<.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
         |SpecificCall <@ (.<.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
             -> // (<) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapLessThan lhs rhs
         |SpecificCall <@ (.<=.) : devicefloat -> float -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
         |SpecificCall <@ (.<=.) : devicefloat -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
         |SpecificCall <@ (.<=.) : float -> devicefloat -> devicebool @> (_, _, [lhsExpr; rhsExpr]) 
             -> // (<=) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapLessThanOrEqual lhs rhs
         // EQUALITY OPERATORS
         |SpecificCall <@ (.=.) @> (_, _, [lhsExpr; rhsExpr]) -> // (=) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapEquality lhs rhs
         |SpecificCall <@ (.<>.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<>) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapInequality lhs rhs
         |SpecificCall <@ (.&&.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<>) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapConditionalAnd lhs rhs
         |SpecificCall <@ (.||.) @> (_, _, [lhsExpr; rhsExpr]) -> // (<>) Operator
-            let lhs = decomposeMap lhsExpr mapArgs
-            let rhs = decomposeMap rhsExpr mapArgs
+            use lhs = decomposeMap lhsExpr mapArgs
+            use rhs = decomposeMap rhsExpr mapArgs
             GeneralDeviceKernels.mapConditionalOr lhs rhs
         // OTHER
         |_ -> failwith "Operation Not Supported."
@@ -301,8 +301,8 @@ module private DeviceArrayOps =
                     let mutable cudaPtr = System.IntPtr(0)
                     DeviceInterop.createUninitialisedCUDADoubleArray((result.Length+1)/2, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
                     DeviceFloatKernels.reduceToHalf(result.CudaPtr, 0, result.Length, cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck // reduce the resulting array to half size
-                    let test = ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, (result.Length+1)/2, FullArray, AutoGenerated)
-                    assocReduceFloatIntrnl code test // repeat until array of size 1
+                    let newArr = ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, (result.Length+1)/2, FullArray, AutoGenerated)
+                    assocReduceFloatIntrnl code newArr // repeat until array of size 1
             assocReduceFloatIntrnl code array.DeviceArray
 /// Stencil templates
 type Stencils =
