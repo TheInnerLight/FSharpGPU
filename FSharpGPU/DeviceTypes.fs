@@ -35,7 +35,7 @@ type internal ArraySpecification =
 
 /// Container for Device Arrays
 type ComputeArray internal (arrayType : ComputeResult, cudaPtr : System.IntPtr, length : int, arraySpec : ArraySpecification, generationMethod : GenerationMethod) = 
-    let mutable isDisposed = false;
+    let mutable isDisposed = false
     let cleanup () =
         match arraySpec with
         |FullArray ->
@@ -163,3 +163,8 @@ module ComputeOperators =
 /// An array of items stored on the GPU
 type devicearray<'a when 'a :> IGPUType>(devArray : ComputeArray) = 
     member internal this.DeviceArray = devArray
+    override this.Finalize() = devArray.Dispose()
+    interface System.IDisposable with
+        member this.Dispose() = devArray.Dispose()
+    
+
