@@ -32,7 +32,7 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 template<typename T>
-__device__ void getInputArrayValueForIndexingScheme1000(int pos, T *inputArr, const int inputOffset, const int inputN, int scheme, T *val)
+__device__ void getInputArrayValueForIndexingScheme(int pos, T *inputArr, const int inputOffset, const int inputN, int scheme, T *val)
 {
 	//printf("Array value function called\n");
 	switch (scheme)
@@ -94,7 +94,7 @@ __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadB
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme1000<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val);
 	}
 }
@@ -105,7 +105,7 @@ __global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, co
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme1000<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val, d);
 	}
 }
@@ -116,7 +116,7 @@ __global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, c
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme1000<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(d, val);
 	}
 }
@@ -127,9 +127,22 @@ __global__ void _kernel_map2_op(T *input1Arr, const int input1Offset, T *input2A
 	T val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme1000<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
-		getInputArrayValueForIndexingScheme1000<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
+		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
+		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
 		T newVal = p_function(val1, val2);
 		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val1, val2);
+	}
+}
+
+/* Reduce to half the size */
+template<typename T>
+__global__ void _kernel_reduce_to_half(T *inputArr, const int inputOffset, const ThreadBlocks inputN, T *outputArr)
+{
+	T val;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
+		if ((i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) % 2 == 0)
+			outputArr[(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) / 2] = val;
 	}
 }

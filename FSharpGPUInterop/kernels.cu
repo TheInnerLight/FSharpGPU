@@ -56,61 +56,6 @@ ThreadBlocks getThreadsAndBlocks32(const int n)
 	return tb;
 }
 
-__device__ void getInputArrayValueForIndexingScheme(double *inputArr, const int inputOffset, const int inputN, int scheme, double *val)
-{
-	switch (scheme)
-	{
-	case 0:
-		if (((blockIdx.x * blockDim.x + threadIdx.x + inputOffset) >= inputN) || ((blockIdx.x * blockDim.x + threadIdx.x + inputOffset) < 0)) *val = 0.0;
-		else *val = inputArr[blockIdx.x * blockDim.x + threadIdx.x + inputOffset];
-		break;
-	default:
-		*val = inputArr[blockIdx.x * blockDim.x + threadIdx.x + inputOffset % inputN];
-	}
-}
-
-__device__ void getInputArrayValueForIndexingScheme(int pos, double *inputArr, const int inputOffset, const int inputN, int scheme, double *val)
-{
-	switch (scheme)
-	{
-	case 0:
-		if ((pos + inputOffset) >= inputN) *val = 0.0;
-		else *val = inputArr[pos + inputOffset];
-		break;
-	default:
-		*val = inputArr[(pos + inputOffset) % inputN];
-	}
-}
-
-__device__ void getInputArrayValueForIndexingScheme(int pos, __int32 *inputArr, const int inputOffset, const int inputN, int scheme, __int32 *val)
-{
-	switch (scheme)
-	{
-	case 0:
-		if ((pos + inputOffset) >= inputN) *val = 0.0;
-		else *val = inputArr[pos + inputOffset];
-		break;
-	default:
-		*val = inputArr[(pos + inputOffset) % inputN];
-	}
-}
-
-/******************************************************************************************************************/
-/* double kernel reductions */
-/******************************************************************************************************************/
-
-/* Reduce to half the size */
-__global__ void _kernel_ddreduceToHalf(double *inputArr, const __int32 inputOffset, const ThreadBlocks inputN, double *outputArr)
-{
-	double val;
-	for (int i = 0; i < inputN.loopCount; ++i)
-	{
-		getInputArrayValueForIndexingScheme(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		if ((i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) % 2 == 0)
-			outputArr[(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) / 2] = val;
-	}
-}
-
 /******************************************************************************************************************/
 /* double filters */
 /******************************************************************************************************************/
@@ -222,6 +167,7 @@ __device__ dbl_func arctan_kernel = _kernel_arctan<double, double>;
 __device__ dbl_func log_kernel = _kernel_log<double, double>;
 __device__ dbl_func log10_kernel = _kernel_log10<double, double>;
 __device__ dbl_func exp_kernel = _kernel_exp<double, double>;
+
 
 // _kernel_map_op is for applying functions to an array element
 // _kernel_map_with_const_op is for applying functions to an array element and a fixed value
@@ -695,7 +641,7 @@ int bbmap2ConditionOr(__int32 *input1Arr, const int input1Offset, __int32 *input
 int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr)
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
-	_kernel_ddreduceToHalf << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, outputArr);
+	_kernel_reduce_to_half<double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, outputArr);
 	return cudaGetLastError();
 }
 
