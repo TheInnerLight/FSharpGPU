@@ -38,11 +38,11 @@ __device__ void getInputArrayValueForIndexingScheme(int pos, T *inputArr, const 
 	switch (scheme)
 	{
 	case 0:
-		if (((blockIdx.x * blockDim.x + threadIdx.x + inputOffset) >= inputN) || ((blockIdx.x * blockDim.x + threadIdx.x + inputOffset) < 0)) *val = 0.0;
-		else *val = inputArr[blockIdx.x * blockDim.x + threadIdx.x + inputOffset];
+		if ((pos + inputOffset >= inputN) || (pos + inputOffset < 0)) *val = 0.0;
+		else *val = inputArr[pos + inputOffset];
 		break;
 	default:
-		*val = inputArr[blockIdx.x * blockDim.x + threadIdx.x + inputOffset % inputN];
+		*val = inputArr[(pos + inputOffset) % inputN];
 	}
 }
 
@@ -94,8 +94,12 @@ __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadB
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val);
+		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		if (pos < inputN.N)
+		{
+			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, 0, &val);
+			outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val);
+		}
 	}
 }
 
@@ -105,8 +109,12 @@ __global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, co
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val, d);
+		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		if (pos < inputN.N)
+		{
+			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, 0, &val);
+			outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val, d);
+		}
 	}
 }
 
@@ -116,8 +124,12 @@ __global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, c
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, inputArr, inputOffset, inputN.N, 0, &val);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(d, val);
+		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		if (pos < inputN.N)
+		{
+			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, 0, &val);
+			outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(d, val);
+		}
 	}
 }
 
@@ -127,10 +139,14 @@ __global__ void _kernel_map2_op(T *input1Arr, const int input1Offset, T *input2A
 	T val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
 	{
-		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input1Arr, input1Offset, inputN.N, 0, &val1);
-		getInputArrayValueForIndexingScheme<T>(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x, input2Arr, input2Offset, inputN.N, 0, &val2);
-		T newVal = p_function(val1, val2);
-		outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val1, val2);
+		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		if (pos < inputN.N) 
+		{
+			getInputArrayValueForIndexingScheme<T>(pos, input1Arr, input1Offset, inputN.N, 0, &val1);
+			getInputArrayValueForIndexingScheme<T>(pos, input2Arr, input2Offset, inputN.N, 0, &val2);
+			T newVal = p_function(val1, val2);
+			outputArr[pos] = p_function(val1, val2);
+		}
 	}
 }
 
@@ -145,4 +161,23 @@ __global__ void _kernel_reduce_to_half(T *inputArr, const int inputOffset, const
 		if ((i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) % 2 == 0)
 			outputArr[(i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) / 2] = val;
 	}
+}
+
+/* sum */
+
+template<typename T>
+__global__ void _kernel_sum_total(T *workingArr, const ThreadBlocks inputN, T* outArr)
+{
+	T val1, val2;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		if ((i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) % 2 == 0 && (i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) < inputN.N)
+		{
+			int pos = (i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x) / 2;
+			getInputArrayValueForIndexingScheme(pos * 2, workingArr, 0, inputN.N, 0, &val1);
+			getInputArrayValueForIndexingScheme(pos * 2 + 1, workingArr, 0, inputN.N, 0, &val2);
+			outArr[pos] = val1 + val2;
+		}
+	}
+
 }

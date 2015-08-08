@@ -121,6 +121,8 @@ extern "C" __declspec(dllexport) int bbmap2ConditionOr(__int32 *input1Arr, const
 
 extern "C" __declspec(dllexport) int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, double *outputArr);
 
+extern "C" __declspec(dllexport) int ddsumTotal(double *inputArr, const int inputOffset, const int inputN, double *outputArr);
+
 /* double filters */
 
 extern "C" __declspec(dllexport) int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *outputArr, __int32 *outputN);

@@ -37,7 +37,7 @@ ThreadBlocks getThreadsAndBlocks(const int n)
 	tb.threadCount = std::min(MAX_THREADS, n);
 	tb.blockCount = std::min(MAX_BLOCKS, std::max(1, (n + tb.threadCount - 1) / tb.threadCount));
 	tb.thrBlockCount = tb.threadCount * tb.blockCount;
-	tb.loopCount = std::min(MAX_BLOCKS, std::max(1, (n + tb.thrBlockCount - 1) / tb.thrBlockCount));
+	tb.loopCount = std::max(1, (n + tb.thrBlockCount - 1) / tb.thrBlockCount);
 	tb.N = n;
 	return tb;
 }
@@ -49,7 +49,7 @@ ThreadBlocks getThreadsAndBlocks32(const int n)
 	
 	tb.threadCount = std::min(MAX_THREADS, n);
 	tb.loopCount = std::min(32, std::max(1, (n + tb.threadCount - 1) / tb.threadCount));
-	__int32 thrLoopCount = tb.loopCount * tb.threadCount;
+	int thrLoopCount = tb.loopCount * tb.threadCount;
 	tb.blockCount = std::min(MAX_BLOCKS, std::max(1, (n + thrLoopCount - 1) / thrLoopCount));
 	tb.thrBlockCount = tb.threadCount * tb.blockCount;
 	tb.N = n;
@@ -642,6 +642,30 @@ int ddreduceToHalf(double *inputArr, const int inputOffset, const int inputN, do
 {
 	ThreadBlocks tb = getThreadsAndBlocks(inputN);
 	_kernel_reduce_to_half<double> << < tb.blockCount, tb.threadCount >> >(inputArr, inputOffset, tb, outputArr);
+	return cudaGetLastError();
+}
+
+/* Function for summing all elements in an array */
+int ddsumTotal(double *inputArr, const int inputOffset, const int inputN, double *outputArr) 
+{
+	size_t nextPow2N = pow(2, ceil(log2(inputN)));
+	double *workingArray, *workingArray2;
+	createCUDADoubleArray(nextPow2N, &workingArray);
+	createCUDADoubleArray(nextPow2N, &workingArray2);
+	cudaMemset(workingArray, 0, nextPow2N*sizeof(double));
+	cudaMemcpy(workingArray, inputArr + inputOffset, inputN*sizeof(double), cudaMemcpyDeviceToDevice);
+	for (size_t curSize = nextPow2N; curSize > 1; curSize /= 2) 
+	{
+		ThreadBlocks tb = getThreadsAndBlocks(curSize);
+		_kernel_sum_total<double> << < tb.blockCount, tb.threadCount >> >(workingArray, tb, workingArray2);
+		double* temp = workingArray2;
+		workingArray2 = workingArray;
+		workingArray = temp;
+	}
+
+	cudaMemcpy(outputArr, workingArray, sizeof(double), cudaMemcpyDeviceToDevice);
+	freeCUDAArray(workingArray);
+	freeCUDAArray(workingArray2);
 	return cudaGetLastError();
 }
 

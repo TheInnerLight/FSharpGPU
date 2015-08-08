@@ -167,6 +167,9 @@ module internal DeviceFloatKernels =
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddreduceToHalf", CallingConvention = CallingConvention.Cdecl)>]
     extern int reduceToHalf(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
+    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddsumTotal", CallingConvention = CallingConvention.Cdecl)>]
+    extern int sumTotal(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
+
     // Float to Float filters
 
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddfilter", CallingConvention = CallingConvention.Cdecl)>]
