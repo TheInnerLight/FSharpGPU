@@ -106,19 +106,19 @@ type DevieArrayUnitTests() =
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.filter (fun x -> x .>. 0.5) |> Array.ofDeviceArray
         let cpuResult = array |> Array.filter (fun x -> x > 0.5)
-        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
         // test2
         let array = Array.init (10000) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.filter (fun x -> x .<. 0.5) |> Array.ofDeviceArray
         let cpuResult = array |> Array.filter (fun x -> x < 0.5)
-        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
         // test3
         let array = Array.init (10000) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.filter (fun x -> x ** 2.0 .<. 0.5) |> Array.ofDeviceArray
         let cpuResult = array |> Array.filter (fun x -> x ** 2.0 < 0.5)
-        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
         // test4
         let array = Array.init (10000) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
@@ -130,4 +130,38 @@ type DevieArrayUnitTests() =
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.filter (fun x -> (x ** 2.0 .<. 0.25) .||. ((x .>. 0.7) .&&. (x .<. 0.8))) |> Array.ofDeviceArray
         let cpuResult = array |> Array.filter (fun x -> (x ** 2.0 < 0.25) || ((x > 0.7) && (x < 0.8)))
-        (cudaResult, cpuResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+    [<TestMethod>]
+    member x.SummationTests () = 
+        let rnd = Random()
+        let tolerance = 1e-9
+        let array = Array.init (3571) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> x * 2.0)
+        let cpuResult = array |> Array.sumBy (fun x -> x * 2.0)
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
+        let array = Array.init (3989) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> x + 3.0)
+        let cpuResult = array |> Array.sumBy (fun x -> x + 3.0)
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
+        let array = Array.init (9876) (fun i -> float i * 2.0)
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> 1.0 / x )
+        let cpuResult = array |> Array.sumBy (fun x -> 1.0 / x)
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
+        let array = Array.init (8752) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> sin x )
+        let cpuResult = array |> Array.sumBy (fun x -> sin x)
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
+        let array = Array.init (4831) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> sqrt x )
+        let cpuResult = array |> Array.sumBy (fun x -> sqrt x)
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
+        let array = Array.init (4096) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> x ** 0.4)
+        let cpuResult = array |> Array.sumBy (fun x -> x ** 0.4)
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
