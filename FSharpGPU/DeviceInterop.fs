@@ -334,6 +334,7 @@ module internal GeneralDeviceKernels =
 
     // Comparison
 
+    /// A function for elementwise greater than comparison of device elements
     let mapGreaterThan cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 > d2)
@@ -342,6 +343,7 @@ module internal GeneralDeviceKernels =
         |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2GreaterThan) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
 
+    /// A function for elementwise greater than or equal comparison of device elements
     let mapGreaterThanOrEqual cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 >= d2)
@@ -350,6 +352,7 @@ module internal GeneralDeviceKernels =
         |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2GreaterThanOrEqual) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
 
+    /// A function for elementwise less than comparison of device elements
     let mapLessThan cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 < d2)
@@ -358,6 +361,7 @@ module internal GeneralDeviceKernels =
         |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2LessThan) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.InvalidOperationException()
 
+    /// A function for elementwise less than or equal comparison of device elements
     let mapLessThanOrEqual cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 <= d2)
@@ -368,6 +372,7 @@ module internal GeneralDeviceKernels =
 
     // Equality
 
+    /// A function for elementwise equality checking of device elements
     let mapEquality cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 = d2)
@@ -377,6 +382,7 @@ module internal GeneralDeviceKernels =
         |ResComputeArray arr1, ResComputeArray arr2 -> ResComputeArray(typeChangingMap2 (DeviceFloatKernels.map2Equality) arr1 arr2 (ResComputeBool(false)))
         |_ -> raise <| System.NotSupportedException()
 
+    /// A function for elementwise inequality checking of device elements
     let mapInequality cmpVal1 cmpVal2 =
         match (cmpVal1, cmpVal2) with 
         |ResComputeFloat d1, ResComputeFloat d2 -> ResComputeBool(d1 <> d2)
@@ -388,10 +394,12 @@ module internal GeneralDeviceKernels =
 
     // Conditional
 
+    /// A function for elementwise conditional AND of device elements
     let mapConditionalAnd cmpVal1 cmpVal2 =
         foldCommutativeConditional cmpVal1 cmpVal2
             ( && ) (DeviceBoolKernels.mapConditionalAnd) (DeviceBoolKernels.map2ConditionalAnd)
 
+    /// A function for elementwise conditional OR of device elements
     let mapConditionalOr cmpVal1 cmpVal2 =
         foldCommutativeConditional cmpVal1 cmpVal2
             ( || ) (DeviceBoolKernels.mapConditionalOr) (DeviceBoolKernels.map2ConditionalOr)

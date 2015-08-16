@@ -19,7 +19,8 @@ along with FSharpGPU.  If not, see <http://www.gnu.org/licenses/>.
 namespace NovelFS.FSharpGPU
 
 /// Error handling functions
-module private DeviceError =
+module DeviceError =
+    /// Helper function for raising exceptions in stub device function declerations
     let raiseNotSupportedOperation() =
         raise <| System.NotSupportedException ("Performing operations directly on the CUDA data is not supported.  The operation should be called as part of a Quatation.")
 
@@ -34,7 +35,7 @@ type internal ArraySpecification =
     |OffsetSubarray of int
 
 /// Container for Device Arrays
-type ComputeArray internal (arrayType : ComputeResult, cudaPtr : System.IntPtr, length : int, arraySpec : ArraySpecification, generationMethod : GenerationMethod) = 
+type internal ComputeArray internal (arrayType : ComputeResult, cudaPtr : System.IntPtr, length : int, arraySpec : ArraySpecification, generationMethod : GenerationMethod) = 
     let mutable isDisposed = false
     let cleanup () =
         match arraySpec with
@@ -85,84 +86,86 @@ module internal DeviceArrayInfo =
         |ResComputeFloat32 devFloat -> sizeof<float32>
         |ResComputeBool devBool -> sizeof<int>
 
-module TypeHelper =
-    let raiseNotSupported() = raise <| System.NotSupportedException("This method should not be called directly, it should be used as part of a quotation.")
-
 //
 // GPU Types
 // ---------
 // These types do not and should not have implemented functionality.  They exist only to allow the F# type-checker to enforce the correctness of expressions.
 
-/// A type that exists on the GPU
+/// A marker for types which reside in device memory instead of host memory.
 type IGPUType = interface end
 
-/// A bool on the GPU
+/// A bool-equivalent type which resides in device memory
 type devicebool = class
     interface IGPUType
     end
 
-/// A (double precision) floating point number on the GPU
+/// A (double precision) floating point number which resides in device memory
 type devicefloat =
     interface IGPUType
-    static member ( + ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( + ) (flt1 : devicefloat, flt2 : float) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( + ) (flt1 : float, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( - ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( - ) (flt1 : devicefloat, flt2 : float) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( - ) (flt1 : float, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( * ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( * ) (flt1 : devicefloat, flt2 : float) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( * ) (flt1 : float, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( / ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( / ) (flt1 : devicefloat, flt2 : float) : devicefloat = TypeHelper.raiseNotSupported()
-    static member ( / ) (flt1 : float, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Pow (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Pow (flt1 : devicefloat, flt2 : float) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Pow (flt1 : float, flt2 : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Sin (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Cos (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Tan (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Sinh (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Cosh (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Tanh (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Asin (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Acos (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Atan (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Sqrt (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Log (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Log10 (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member Exp (flt : devicefloat) : devicefloat = TypeHelper.raiseNotSupported()
-    static member CompareTo (flt1 : devicefloat, flt2 : float) = TypeHelper.raiseNotSupported()
-    static member CompareTo (flt1 : devicefloat, flt2 : devicefloat) = TypeHelper.raiseNotSupported()
-    static member CompareTo (flt1 : float, flt2 : devicefloat) = TypeHelper.raiseNotSupported()
+    static member ( + ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( + ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( + ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( - ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( - ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( - ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( * ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( * ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( * ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( / ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( / ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member ( / ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Pow (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Pow (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Pow (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Sin (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Cos (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Tan (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Sinh (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Cosh (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Tanh (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Asin (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Acos (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Atan (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Sqrt (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Log (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Log10 (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member Exp (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    static member CompareTo (flt1 : devicefloat, flt2 : float) = DeviceError.raiseNotSupportedOperation()
+    static member CompareTo (flt1 : devicefloat, flt2 : devicefloat) = DeviceError.raiseNotSupportedOperation()
+    static member CompareTo (flt1 : float, flt2 : devicefloat) = DeviceError.raiseNotSupportedOperation()
 
 [<AutoOpen>]
-module ComputeOperators =
+/// Basic device operators.  This module is automatically opened in F# GPU.
+module GPUOperators =
     /// device capable greater than operator
     let inline (.>.) (val1 : ^a) (val2 : ^b) : devicebool =
         let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
-        TypeHelper.raiseNotSupported()
+        DeviceError.raiseNotSupportedOperation()
     /// device capable greater than or equal operator
     let inline (.>=.) (val1 : 'a) (val2 : 'b) : devicebool =
         let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
-        TypeHelper.raiseNotSupported()
+        DeviceError.raiseNotSupportedOperation()
     /// device capable less than operator
     let inline (.<.) (val1 : 'a) (val2 : 'b) : devicebool =
         let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
-        TypeHelper.raiseNotSupported()
+        DeviceError.raiseNotSupportedOperation()
     /// device capable less than or equal operator
     let inline (.<=.) (val1 : 'a) (val2 : 'b) : devicebool =
         let compare = ((^a or ^b)  : (static member CompareTo : ^a * ^b -> devicebool) (val1, val2))
-        TypeHelper.raiseNotSupported()
+        DeviceError.raiseNotSupportedOperation()
+    /// device capable equality operator
+    let ( .=. ) val1 val2 : devicebool  = DeviceError.raiseNotSupportedOperation()
+    /// device capable inequality operator
+    let ( .<>. ) val1 val2 : devicebool  = DeviceError.raiseNotSupportedOperation()
+    /// device capable conditional AND operator
+    let ( .&&. ) (val1 : devicebool) (val2 : devicebool) : devicebool  = DeviceError.raiseNotSupportedOperation()
+    /// device capable conditional OR operator
+    let ( .||. ) (val1 : devicebool) (val2 : devicebool) : devicebool  = DeviceError.raiseNotSupportedOperation()
 
-    let ( .=. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
-    let ( .<>. ) val1 val2 : devicebool  = TypeHelper.raiseNotSupported()
-    let ( .&&. ) (val1 : devicebool) (val2 : devicebool) : devicebool  = TypeHelper.raiseNotSupported()
-    let ( .||. ) (val1 : devicebool) (val2 : devicebool) : devicebool  = TypeHelper.raiseNotSupported()
-
-/// An array of items stored on the GPU
-type devicearray<'a when 'a :> IGPUType>(devArray : ComputeArray) = 
+/// The type of immutable arrays of generic type which reside in device memory
+type devicearray<'a when 'a :> IGPUType> internal (devArray : ComputeArray) = 
     member internal this.DeviceArray = devArray
+    /// Frees the device memory associated with this object
     override this.Finalize() = devArray.Dispose()
     interface System.IDisposable with
         member this.Dispose() = devArray.Dispose()

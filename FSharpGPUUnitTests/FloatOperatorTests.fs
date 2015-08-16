@@ -322,3 +322,14 @@ type FloatOperatorArithmeticUnitTests() =
         let cpuResult = array |> Array.map ( fun x -> constant / x )
         let cudaResult = cudaArray |> DeviceArray.map (fun x  -> constant / x ) |> Array.ofDeviceArray
         (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+    /// Unit tests for identity function
+    [<TestMethod>]
+    member x.IdentityTests () = 
+        let rnd = System.Random()
+        // Test1
+        let constant = rnd.NextDouble()
+        let array = Array.init (10000) (fun i -> rnd.NextDouble() * 1e19 - rnd.NextDouble() * 1e19)
+        let cudaArray = DeviceArray.ofArray array
+        let cpuResult = array |> Array.map (id)
+        let cudaResult = cudaArray |> DeviceArray.map (id) |> Array.ofDeviceArray
+        (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))

@@ -21,8 +21,11 @@ namespace NovelFS.FSharpGPU
 open System
 open System.Runtime.InteropServices
 
-exception CudaOutOfMemoryException of string
-
+/// The exception that is thrown when a call to the device fails
+exception DeviceException of string
+/// The exception that is thrown when there is not enough device memory available to perform the requested operation.
+exception DeviceOutOfMemoryException of string
+/// Functions for device utility functionality
 module internal DeviceInterop =
     [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="createCUDAArray", CallingConvention = CallingConvention.Cdecl)>]
     extern int createUninitialisedArray(int size, int typeSize, IntPtr& handle)
@@ -52,15 +55,15 @@ module internal DeviceInterop =
         let value = func
         match value with
         |0 -> ()
-        |1 -> failwith "cudaErrorMissingConfiguration : The device function being invoked (usually via cudaLaunch()) was not previously configured via the cudaConfigureCall() function."
-        |2 -> raise <| CudaOutOfMemoryException "The API call failed because it was unable to allocate enough memory to perform the requested operation."
-        |3 -> failwith "cudaErrorInitializationError : The API call failed because the CUDA driver and runtime could not be initialized."
-        |4 -> failwith "cudaErrorLaunchFailure : An exception occurred on the device while executing a kernel. Common causes include dereferencing an invalid device pointer and accessing out of bounds shared memory."
-        |5 -> failwith "cudaErrorPriorLaunchFailure : This indicated that a previous kernel launch failed. This was previously used for device emulation of kernel launches."
-        |6 -> failwith "cudaErrorLaunchTimeout : This indicates that the device kernel took too long to execute."
-        |7 -> failwith "cudaErrorLaunchOutOfResources : This indicates that a launch did not occur because it did not have appropriate resources. This error usually indicates that the user has attempted to pass too many arguments to the device kernel, or the kernel launch specifies too many threads for the kernel's register count."
-        |8 -> failwith "cudaErrorInvalidDeviceFunction : The requested device function does not exist or is not compiled for the proper device architecture."
-        |9 -> failwith "cudaErrorInvalidConfiguration :	This indicates that a kernel launch is requesting resources that can never be satisfied by the current device. Requesting more shared memory per block than the device supports will trigger this error, as will requesting too many threads or blocks."
-        |10 -> failwith "cudaErrorInvalidDevice : This indicates that the device ordinal supplied by the user does not correspond to a valid CUDA device."
-        |11 -> failwith "cudaErrorInvalidValue : This indicates that one or more of the parameters passed to the API call is not within an acceptable range of values."
-        |_ -> failwith (sprintf "cuda error code %i" value)
+        |1 -> raise <| DeviceException "cudaErrorMissingConfiguration : The device function being invoked (usually via cudaLaunch()) was not previously configured via the cudaConfigureCall() function."
+        |2 -> raise <| DeviceOutOfMemoryException "The API call failed because it was unable to allocate enough memory to perform the requested operation."
+        |3 -> raise <| DeviceException "cudaErrorInitializationError : The API call failed because the CUDA driver and runtime could not be initialized."
+        |4 -> raise <| DeviceException "cudaErrorLaunchFailure : An exception occurred on the device while executing a kernel. Common causes include dereferencing an invalid device pointer and accessing out of bounds shared memory."
+        |5 -> raise <| DeviceException "cudaErrorPriorLaunchFailure : This indicated that a previous kernel launch failed. This was previously used for device emulation of kernel launches."
+        |6 -> raise <| DeviceException "cudaErrorLaunchTimeout : This indicates that the device kernel took too long to execute."
+        |7 -> raise <| DeviceException "cudaErrorLaunchOutOfResources : This indicates that a launch did not occur because it did not have appropriate resources. This error usually indicates that the user has attempted to pass too many arguments to the device kernel, or the kernel launch specifies too many threads for the kernel's register count."
+        |8 -> raise <| DeviceException "cudaErrorInvalidDeviceFunction : The requested device function does not exist or is not compiled for the proper device architecture."
+        |9 -> raise <| DeviceException "cudaErrorInvalidConfiguration :	This indicates that a kernel launch is requesting resources that can never be satisfied by the current device. Requesting more shared memory per block than the device supports will trigger this error, as will requesting too many threads or blocks."
+        |10 -> raise <| DeviceException "cudaErrorInvalidDevice : This indicates that the device ordinal supplied by the user does not correspond to a valid CUDA device."
+        |11 -> raise <| DeviceException "cudaErrorInvalidValue : This indicates that one or more of the parameters passed to the API call is not within an acceptable range of values."
+        |_ -> raise <| DeviceException (sprintf "cuda error code %i" value)
