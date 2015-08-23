@@ -21,6 +21,7 @@ namespace NovelFS.FSharpGPU
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
+open Microsoft.FSharp.Quotations.ExprShape
 open FSharp.Quotations.Evaluator
 
 /// Arguments for mappings of different lengths
@@ -28,6 +29,9 @@ type private MapArgs<'a> =
     |Map1Args of Var * ComputeResult
     |Map2Args of Var * ComputeResult * Var * ComputeResult
     |Map3Args of Var * ComputeResult* Var * ComputeResult * Var * ComputeResult
+/// Arguments for folds of different lengths
+type private FoldArgs<'a> =
+    |Fold1Args of Var * Var * ComputeResult
 /// Cases for neighbour mapping
 [<RequireQualifiedAccess>]
 type NeighbourMapping<'a,'b> =
@@ -72,11 +76,79 @@ type Array =
                                     |_ -> true)
         |_ -> failwith "Invalid type"
 
+type SepFold =
+    |VariableExpr of Var option * Expr
+    |ManyVarExpr of Map<Var, Expr>
+
+type SepFoldExpr =
+    |MapExpr of System.Guid * Expr 
+    |FoldExpr of Expr  * Expr list
+
+
 /// Basic operation implementation on Device Arrays
 module private DeviceArrayOps =
     /// Returns the length of the device array
     let length (array : devicearray<'a>) =
         array.DeviceArray.Length
+
+//    let rec seperateFoldVariables foldVar code (array : devicearray<'a>)  =
+//        match code with
+//        |Value (_, _) -> 
+//            VariableExpr (None, code)
+//        |Var(var) -> 
+//            VariableExpr (Some var, code)
+//        |ShapeCombination(shapeComboObject, exprList) ->
+//            let shapeMap = 
+//                (Map.empty, exprList) ||> List.fold (fun tMap cExpr ->
+//                    let exprRes = seperateFoldVariables foldVar cExpr array
+//                    match exprRes with
+//                    |VariableExpr (v, vExpr) ->
+//                        match v with
+//                        |Some v -> tMap |> Map.add v vExpr
+//                        |None -> tMap
+//                    |ManyVarExpr vMap ->
+//                        Map.fold (fun acc key value -> Map.add key value acc) vMap tMap)
+//            let test = Seq.head shapeMap
+//            match shapeMap.ContainsKey(foldVar) with
+//            |true ->
+//                match shapeMap.Count with
+//                |0 -> VariableExpr (None, code)
+//                |1 ->
+//                    let variable = shapeMap |> Map.toSeq |> Seq.head |> fst 
+//                    VariableExpr(Some variable, code)
+//            |false -> ManyVarExpr(shapeMap)
+//
+//        | ShapeLambda (var, expr) -> seperateFoldVariables foldVar expr array
+    
+    let rec seperateFoldVariables foldVar code (array : devicearray<'a>)  =
+        let genGuid() = System.Guid.NewGuid()
+        match code with
+        |Value (_, _) -> 
+            MapExpr(genGuid(), code) // An isolated value can be extracted as part of a map
+        |Var(var) -> 
+            match var = foldVar with
+            |true -> FoldExpr(code, []) // If expression contains fold variable
+            |false -> MapExpr(genGuid(), code) // Operations on variables other than the fold variable can be turned into maps
+        |ShapeCombination(shapeComboObject, exprList) ->
+            let subResults = exprList |> List.map (fun subExpr -> seperateFoldVariables foldVar subExpr array)
+            match (subResults |> List.forall (function |MapExpr _ -> true; |FoldExpr _ -> false) ) with
+            |true -> MapExpr (genGuid(), code)
+            |false ->
+                let exprAcc =
+                    ([], subResults) ||> List.fold (fun acc subRes ->
+                            match subRes with
+                            |MapExpr (guid, mapCode) -> 
+                                (Var(sprintf "`%A`" guid, mapCode.Type) |> Expr.Var, [mapCode] ) :: acc
+                            |FoldExpr (foldCode, subCodes) ->
+                                (foldCode, subCodes) :: acc)
+
+                let exprList = exprAcc |> List.collect snd
+                let combinedExpr = RebuildShapeCombination(shapeComboObject, exprAcc|> List.rev |> List.map fst)
+                FoldExpr(combinedExpr, exprList)
+                
+        | ShapeLambda (var, expr) -> seperateFoldVariables foldVar expr array
+
+
     /// recursively break apart the tree containing standard F# functions and recompose it using CUDA functions
     let rec private decomposeMap code (mapArgs : Map<Var,_>) =
         match code with
@@ -411,5 +483,11 @@ type DeviceArray =
     /// Returns the average of the elements in the devicearray.
     static member average() =
         DeviceArrayOps.TypedReductions.average <@ id : devicefloat -> devicefloat  @>
+
+    static member foldTest ([<ReflectedDefinition()>] code : Expr<float -> devicefloat -> devicefloat>) =
+        match code with
+        |ShapeLambda (var, expr) ->
+            DeviceArrayOps.seperateFoldVariables var expr
+        |_ -> failwith "Error"
 
 

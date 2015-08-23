@@ -56,6 +56,9 @@ let main argv =
         printfn ""
         printfn "CUDA"
         printfn ""
+
+        let test = cudaArray |> DeviceArray.foldTest (fun t value -> t + value + 5.0 * value)
+
         //let! resultm1 = cudaArray |> DeviceArray.map (fun x -> x + 2.0) |> Array.ofDeviceArray
         use! result = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y -> x ** y * sqrt y + 5.0 * sqrt y) |> Array.ofDeviceArray
         use! result2 = cudaArray |> DeviceArray.map (fun x -> (sqrt(x) / x /5.0 + 1.0/7.78)) |> Array.ofDeviceArray
