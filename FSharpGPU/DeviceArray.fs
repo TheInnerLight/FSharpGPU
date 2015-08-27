@@ -91,34 +91,14 @@ module private DeviceArrayOps =
     let length (array : devicearray<'a>) =
         array.DeviceArray.Length
 
-//    let rec seperateFoldVariables foldVar code (array : devicearray<'a>)  =
-//        match code with
-//        |Value (_, _) -> 
-//            VariableExpr (None, code)
-//        |Var(var) -> 
-//            VariableExpr (Some var, code)
-//        |ShapeCombination(shapeComboObject, exprList) ->
-//            let shapeMap = 
-//                (Map.empty, exprList) ||> List.fold (fun tMap cExpr ->
-//                    let exprRes = seperateFoldVariables foldVar cExpr array
-//                    match exprRes with
-//                    |VariableExpr (v, vExpr) ->
-//                        match v with
-//                        |Some v -> tMap |> Map.add v vExpr
-//                        |None -> tMap
-//                    |ManyVarExpr vMap ->
-//                        Map.fold (fun acc key value -> Map.add key value acc) vMap tMap)
-//            let test = Seq.head shapeMap
-//            match shapeMap.ContainsKey(foldVar) with
-//            |true ->
-//                match shapeMap.Count with
-//                |0 -> VariableExpr (None, code)
-//                |1 ->
-//                    let variable = shapeMap |> Map.toSeq |> Seq.head |> fst 
-//                    VariableExpr(Some variable, code)
-//            |false -> ManyVarExpr(shapeMap)
-//
-//        | ShapeLambda (var, expr) -> seperateFoldVariables foldVar expr array
+    let rec reApplyLambdas originalExpr varList newExpr =
+        match originalExpr with
+        |ShapeLambda (var, expr) ->
+            reApplyLambdas expr (var :: varList) newExpr
+        |_ ->
+            let acc = Expr.Lambda(varList |> List.head, newExpr)
+            (acc, varList |> List.tail) ||> List.fold (fun acc v -> Expr.Lambda(v, acc))
+            
     
     let rec seperateFoldVariables foldVar code (array : devicearray<'a>)  =
         let genGuid() = System.Guid.NewGuid()
@@ -367,6 +347,20 @@ module private DeviceArrayOps =
         let arrayRes = ComputeArray(array.DeviceArray.ArrayType, cudaPtr, length, FullArray, UserGenerated)
         devicearray<'a>(arrayRes)
 
+    let fold (code : Expr<'a -> 'b -> 'a>) (array : devicearray<'b>) =
+        match code with
+        |ShapeLambda (var, expr) ->
+            let foldResults = seperateFoldVariables var expr array
+            match foldResults with
+            |FoldExpr (foldExpr, mapExrList) ->
+                let mapResults = mapExrList |> List.map (fun mapExpr -> 
+                    let funWithLambda = reApplyLambdas expr [] mapExpr
+                    mapN funWithLambda [array.DeviceArray])
+                foldExpr
+            |_ -> failwith "Error"
+        |_ -> failwith "Error"
+
+
     /// Reduction functions
     module TypedReductions =
         let assocReduceFloat (code : Expr<devicefloat -> devicefloat -> devicefloat>) (array : devicearray<devicefloat>) =
@@ -484,10 +478,7 @@ type DeviceArray =
     static member average() =
         DeviceArrayOps.TypedReductions.average <@ id : devicefloat -> devicefloat  @>
 
-    static member foldTest ([<ReflectedDefinition()>] code : Expr<float -> devicefloat -> devicefloat>) =
-        match code with
-        |ShapeLambda (var, expr) ->
-            DeviceArrayOps.seperateFoldVariables var expr
-        |_ -> failwith "Error"
+    static member foldTest ([<ReflectedDefinition()>] expr) =
+        DeviceArrayOps.fold expr
 
 
