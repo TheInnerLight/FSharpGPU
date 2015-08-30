@@ -40,9 +40,9 @@ type TimerBuilder() =
 
 [<EntryPoint>]
 let main argv = 
-    let array = Array.init (15000000) (fun i -> float i + 1.0)
-    //let array = Array.init (5000000) (fun i -> float i + 1.0)
-    let array2 = Array.init (15000000) (fun i -> float (i*2))
+    //let array = Array.init (16) (fun i -> (float i) + 2.0 )
+    let array = Array.init (15) (fun i -> float i + 5.0)
+    let array2 = Array.init (5000000) (fun i -> float (i*2))
     let array3 = Array.init 15000000 (fun i-> float i)
     let array4 = Array.init 1500000 (fun i-> float i)
 
@@ -57,8 +57,13 @@ let main argv =
         printfn "CUDA"
         printfn ""
 
-        let test = cudaArray |> DeviceArray.foldTest (fun t value -> t + value + 5.0 * value)
+        let test = cudaArray |> DeviceArray.associativeReduce (fun acc value -> acc * (6.0 * value))
+        let testCPU = array |> Array.reduce (fun acc value -> acc * (6.0 * value))
+        let testCPU2 = array |> Array.sumBy (fun v -> v*6.0)
 
+        let test2 = cudaArray |> DeviceArray.associativeReduce (fun acc x -> acc + (sin x))
+        let testCPU2 = array |> Array.reduce (fun acc x -> acc + (sin x))
+        
         //let! resultm1 = cudaArray |> DeviceArray.map (fun x -> x + 2.0) |> Array.ofDeviceArray
         use! result = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y -> x ** y * sqrt y + 5.0 * sqrt y) |> Array.ofDeviceArray
         use! result2 = cudaArray |> DeviceArray.map (fun x -> (sqrt(x) / x /5.0 + 1.0/7.78)) |> Array.ofDeviceArray

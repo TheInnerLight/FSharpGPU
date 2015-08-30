@@ -31,14 +31,25 @@ along with FSharpGPU.If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+enum OutOfBoundsBehaviour
+{
+	ZERO = 0,
+	ONE = 1,
+	PERIODIC = 65535
+};
+
 template<typename T>
 __device__ void getInputArrayValueForIndexingScheme(int pos, T *inputArr, const int inputOffset, const int inputN, int scheme, T *val)
 {
 	//printf("Array value function called\n");
 	switch (scheme)
 	{
-	case 0:
+	case ZERO:
 		if ((pos + inputOffset >= inputN) || (pos + inputOffset < 0)) *val = 0.0;
+		else *val = inputArr[pos + inputOffset];
+		break;
+	case ONE:
+		if ((pos + inputOffset >= inputN) || (pos + inputOffset < 0)) *val = 1.0;
 		else *val = inputArr[pos + inputOffset];
 		break;
 	default:
@@ -87,9 +98,8 @@ template<typename T, typename U> __device__ U _kernel_log(T elem) { return log(e
 template<typename T, typename U> __device__ U _kernel_log10(T elem) { return log10(elem); }
 template<typename T, typename U> __device__ U _kernel_exp(T elem) { return exp(elem); }
 
-
 template<typename T, typename U>
-__global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, U *outputArr, U p_function(T))
+__global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, U *outputArr, U p_function(T), OutOfBoundsBehaviour oobBehaviour)
 {
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -97,14 +107,14 @@ __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadB
 		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
 		if (pos < inputN.N)
 		{
-			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, 0, &val);
+			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, oobBehaviour, &val);
 			outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val);
 		}
 	}
 }
 
 template<typename T, typename U>
-__global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
+__global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T), OutOfBoundsBehaviour oobBehaviour)
 {
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -112,14 +122,14 @@ __global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, co
 		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
 		if (pos < inputN.N)
 		{
-			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, 0, &val);
+			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, oobBehaviour, &val);
 			outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(val, d);
 		}
 	}
 }
 
 template<typename T, typename U>
-__global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T))
+__global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T), OutOfBoundsBehaviour oobBehaviour)
 {
 	T val;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -127,14 +137,14 @@ __global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, c
 		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
 		if (pos < inputN.N)
 		{
-			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, 0, &val);
+			getInputArrayValueForIndexingScheme<T>(pos, inputArr, inputOffset, inputN.N, oobBehaviour, &val);
 			outputArr[i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x] = p_function(d, val);
 		}
 	}
 }
 
 template<typename T, typename U>
-__global__ void _kernel_map2_op(T *input1Arr, const int input1Offset, T *input2Arr, const int input2Offset, const ThreadBlocks inputN, U *outputArr, U p_function(T, T))
+__global__ void _kernel_map2_op(T *input1Arr, const int input1Offset, T *input2Arr, const int input2Offset, const ThreadBlocks inputN, U *outputArr, U p_function(T, T), OutOfBoundsBehaviour oobBehaviour)
 {
 	T val1, val2;
 	for (int i = 0; i < inputN.loopCount; ++i)
@@ -142,8 +152,8 @@ __global__ void _kernel_map2_op(T *input1Arr, const int input1Offset, T *input2A
 		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
 		if (pos < inputN.N) 
 		{
-			getInputArrayValueForIndexingScheme<T>(pos, input1Arr, input1Offset, inputN.N, 0, &val1);
-			getInputArrayValueForIndexingScheme<T>(pos, input2Arr, input2Offset, inputN.N, 0, &val2);
+			getInputArrayValueForIndexingScheme<T>(pos, input1Arr, input1Offset, inputN.N, oobBehaviour, &val1);
+			getInputArrayValueForIndexingScheme<T>(pos, input2Arr, input2Offset, inputN.N, oobBehaviour, &val2);
 			T newVal = p_function(val1, val2);
 			outputArr[pos] = p_function(val1, val2);
 		}
