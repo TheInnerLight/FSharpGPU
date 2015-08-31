@@ -41,9 +41,9 @@ type TimerBuilder() =
 [<EntryPoint>]
 let main argv = 
     //let array = Array.init (16) (fun i -> (float i) + 2.0 )
-    let array = Array.init (15000000) (fun i -> float i + 5.0)
-    let array2 = Array.init (15000000) (fun i -> float (i*2))
-    let array3 = Array.init 15000000 (fun i-> float i)
+    let array = Array.init (7500000) (fun i -> float i + 5.0)
+    let array2 = Array.init (7500000) (fun i -> float (i*2))
+    let array3 = Array.init 1500000 (fun i-> float i)
     let array4 = Array.init 1500000 (fun i-> float i)
 
     let timer = TimerBuilder();
@@ -54,24 +54,28 @@ let main argv =
         let! cudaArray3 = DeviceArray.ofArray array3
         let! cudaArray4 = DeviceArray.ofArray array4
         do! cudaArray |> DeviceArray.map id |> ignore
+
+        let! testCPU2 = array |> Array.reduce (fun acc x -> acc + (sin x))
+
         printfn ""
         printfn "CUDA"
         printfn ""
        
-
-        let test = cudaArray |> DeviceArray.associativeReduce (fun acc value -> acc + (6.0 * value))
-        let testCPU = array |> Array.reduce (fun acc value -> acc + (6.0 * value))
-
-        let test2 = cudaArray |> DeviceArray.associativeReduce (fun acc x -> acc + (sin x))
-        let testCPU2 = array |> Array.reduce (fun acc x -> acc + (sin x))
-        
         //let! resultm1 = cudaArray |> DeviceArray.map (fun x -> x + 2.0) |> Array.ofDeviceArray
+        printfn "7.5 million element reduction"
+        let! testReduce = cudaArray |> DeviceArray.associativeReduce (fun acc value -> acc + (6.0 * value))
+        printfn "7.5 million element reduction"
+        let! testReduce2 = cudaArray |> DeviceArray.associativeReduce (fun acc x -> acc + (sin x))
+        printfn "7.5 million element (x2) map2 function"
         use! result = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y -> x ** y * sqrt y + 5.0 * sqrt y) |> Array.ofDeviceArray
+        printfn "7.5 million element map function"
         use! result2 = cudaArray |> DeviceArray.map (fun x -> (sqrt(x) / x /5.0 + 1.0/7.78)) |> Array.ofDeviceArray
-        
+        printfn "7.5 million element filter"
         use! result2b = cudaArray |> DeviceArray.filter (fun x -> x .<. 100.0 ) |> Array.ofDeviceArray
         //let! result2 = cudaArray |> CudaArray.map (fun x -> x > 5.0 ) |> Array.ofCudaArray
+        printfn "7.5 million element (x2) map2 function"
         use! result3 = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y ->  x * sqrt y .>. 123.5)
+        printfn "1.5 million element summation function"
         use! result4 = cudaArray4 |> DeviceArray.sumBy (fun x -> x + 1.0)
         //let! result3a = cudaArray |> DeviceArray.map (fun x -> x) |> Array.ofDeviceArray
         //let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2 * l + 0.2 * r)) Preserve |> Array.ofDeviceArray
@@ -80,10 +84,20 @@ let main argv =
         printfn ""
         printfn "CPU"
         printfn ""
+        //
+        printfn "7.5 million element reduction"
+        let! testReduceCPU = array |> Array.reduce (fun acc value -> acc + (6.0 * value))
+        printfn "7.5 million element reduction"
+        let! testReduceCPU2 = array |> Array.reduce (fun acc x -> acc + (sin x))
+        printfn "7.5 million element (x2) map2 function"
         let! resultCPU = (array, array2) ||> Array.map2 (fun x y -> x ** y * sqrt y + 5.0 * sqrt y ) 
+        printfn "7.5 million element map function"
         let! result2CPU = array |> Array.map (fun x -> sqrt(x) / x /5.0 + 1.0/7.78)
+        printfn "7.5 million element filter"
         let! result2bCPU = array |> Array.filter (fun x -> x < 100.0 )
+        printfn "7.5 million element (x2) map2 function"
         let! result3CPU = (array, array2) ||> Array.map2 (fun x y -> x * sqrt y > 123.5  ) 
+        printfn "1.5 million element summation function"
         let! result4CPU = array4 |> Array.sumBy (fun x -> x + 1.0)
         //let! result4CPU = array3 |> Array.reduce (fun x y -> x + y )
         printfn "..."

@@ -318,7 +318,7 @@ void deallocBlockSums(ScanBlockAllocation sba)
 void prescanArrayRecursive(__int32 *outArray, const __int32 *inArray, int numElements, int level, ScanBlockAllocation sba)
 {
 	size_t blockSize = BLOCK_SIZE; // max size of the thread blocks
-	size_t numBlocks =
+	__int32 numBlocks =
 		max(1, (int)ceil((int)numElements / (2.f * blockSize)));
 	size_t numThreads;
 
@@ -333,10 +333,10 @@ void prescanArrayRecursive(__int32 *outArray, const __int32 *inArray, int numEle
 
 	// if this is a non-power-of-2 array, the last block will be non-full
 	// compute the smallest power of 2 able to compute its scan.
-	size_t numEltsLastBlock = numElements - (numBlocks - 1) * numEltsPerBlock;
-	size_t numThreadsLastBlock = max(1, numEltsLastBlock / 2);
-	size_t np2LastBlock = 0;
-	size_t sharedMemLastBlock = 0;
+	__int32 numEltsLastBlock = numElements - (numBlocks - 1) * numEltsPerBlock;
+	__int32 numThreadsLastBlock = max(1, numEltsLastBlock / 2);
+	__int32 np2LastBlock = 0;
+	__int32 sharedMemLastBlock = 0;
 
 	if (numEltsLastBlock != numEltsPerBlock)
 	{
@@ -351,8 +351,8 @@ void prescanArrayRecursive(__int32 *outArray, const __int32 *inArray, int numEle
 	}
 
 	// padding space is used to avoid shared memory bank conflicts
-	size_t extraSpace = numEltsPerBlock / NUM_BANKS;
-	size_t sharedMemSize =
+	__int32 extraSpace = numEltsPerBlock / NUM_BANKS;
+	__int32 sharedMemSize =
 		sizeof(__int32) * (numEltsPerBlock + extraSpace);
 
 #ifdef DEBUG

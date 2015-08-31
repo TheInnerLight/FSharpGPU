@@ -27,168 +27,168 @@ module internal DeviceFloatKernels =
 
     // Addition
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapAdd", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapAdd", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapAdd(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmap2Add", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Add", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2Add(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
     // Subtraction
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapSubtract", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSubtract", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapSubtract(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapSubtract2", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSubtract2", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapSubtract2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmap2Subtract", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Subtract", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2Subtract(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
     // Multiplication
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapMultiply", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapMultiply", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapMultiply(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmap2Multiply", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Multiply", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2Multiply(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
     // Division
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapDivide", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapDivide", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapDivide(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapDivide2", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapDivide2", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapDivide2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmap2Divide", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Divide", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2Divide(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
     // Power
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapPower", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapPower", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapPower(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapPower2", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapPower2", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapPower2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmap2Power", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Power", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2Power(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
     // Various maths functions
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapSqrt", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSqrt", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapSqrt(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapArcCos", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapArcCos", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapArcCos(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapCos", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapCos", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapCos(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapCosh", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapCosh", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapCosh(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapArcSin", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapArcSin", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapArcSin(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapSin", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSin", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapSin(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapSinh", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSinh", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapSinh(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapArcTan", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapArcTan", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapArcTan(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapTan", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapTan", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapTan(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapTanh", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapTanh", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapTanh(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapLog", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapLog", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapLog(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddmapLog10", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapLog10", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapLog10(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
     // Float to Bool mappings
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapGT", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGT", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapGreaterThan(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapGT2", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGT2", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapGreaterThan2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2GT", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2GT", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2GreaterThan(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapGTE", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGTE", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapGreaterThanOrEqual(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapGTE2", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGTE2", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapGreaterThanOrEqual2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2GTE", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2GTE", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2GreaterThanOrEqual(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapLT", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLT", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapLessThan(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapLT2", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLT2", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapLessThan2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2LT", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2LT", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2LessThan(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapLTE", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLTE", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapLessThanOrEqual(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapLTE2", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLTE2", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapLessThanOrEqual2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2LTE", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2LTE", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2LessThanOrEqual(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapEquality", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapEquality", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapEquality(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2Equality", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2Equality", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2Equality(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmapNotEquality", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapNotEquality", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapInequality(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="dbmap2NotEquality", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2NotEquality", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2NotEquality(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
     // Float to Float reductions
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddreduceToHalf", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddreduceToHalf", CallingConvention = CallingConvention.Cdecl)>]
     extern int reduceToHalf(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddsumTotal", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddsumTotal", CallingConvention = CallingConvention.Cdecl)>]
     extern int sumTotal(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
 
     // Float to Float filters
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="ddfilter", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddfilter", CallingConvention = CallingConvention.Cdecl)>]
     extern int filter(IntPtr inArr, IntPtr predArr, int inputN, IntPtr outArr, int& size)
 
 module internal DeviceBoolKernels = 
 
     // Bool to Bool maps
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="bbmapConditionAnd", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmapConditionAnd", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapConditionalAnd(IntPtr inArr, int inputOffset, int inputN, int bl, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="bbmap2ConditionAnd", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmap2ConditionAnd", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2ConditionalAnd(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="bbmapConditionOr", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmapConditionOr", CallingConvention = CallingConvention.Cdecl)>]
     extern int mapConditionalOr(IntPtr inArr, int inputOffset, int inputN, int bl, IntPtr outArr)
 
-    [<DllImport(@"..\..\..\Debug\FSharpGPUInterop.dll", EntryPoint="bbmap2ConditionOr", CallingConvention = CallingConvention.Cdecl)>]
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmap2ConditionOr", CallingConvention = CallingConvention.Cdecl)>]
     extern int map2ConditionalOr(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
 
 module internal GeneralDeviceKernels = 
