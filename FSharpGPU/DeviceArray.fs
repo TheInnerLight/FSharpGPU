@@ -82,7 +82,7 @@ type SepFold =
 
 type SepFoldExpr =
     |MapExpr of System.Guid * Expr 
-    |FoldExpr of Expr  * Expr list * Var list
+    |ReduceExpr of Expr  * Expr list * Var list
 
 
 /// Basic operation implementation on Device Arrays
@@ -100,18 +100,18 @@ module private DeviceArrayOps =
             (acc, varList |> List.tail) ||> List.fold (fun acc v -> Expr.Lambda(v, acc))
             
     
-    let rec seperateFoldVariables foldVar code (array : devicearray<'a>)  =
+    let rec seperateReductionVariable foldVar code (array : devicearray<'a>)  =
         let genGuid() = System.Guid.NewGuid()
         match code with
         |Value (_, _) -> 
             MapExpr(genGuid(), code) // An isolated value can be extracted as part of a map
         |Var(var) -> 
             match var = foldVar with
-            |true -> FoldExpr(code, [], []) // If expression contains fold variable
-            |false -> MapExpr(genGuid(), code) // Operations on variables other than the fold variable can be turned into maps
+            |true -> ReduceExpr(code, [], []) // If expression contains the reduction variable
+            |false -> MapExpr(genGuid(), code) // Operations on variables other than the reduction variable can be turned into maps
         |ShapeCombination(shapeComboObject, exprList) ->
-            let subResults = exprList |> List.map (fun subExpr -> seperateFoldVariables foldVar subExpr array)
-            match (subResults |> List.forall (function |MapExpr _ -> true; |FoldExpr _ -> false) ) with
+            let subResults = exprList |> List.map (fun subExpr -> seperateReductionVariable foldVar subExpr array)
+            match (subResults |> List.forall (function |MapExpr _ -> true; |ReduceExpr _ -> false) ) with
             |true -> MapExpr (genGuid(), code)
             |false ->
                 let exprAcc =
@@ -120,15 +120,15 @@ module private DeviceArrayOps =
                             |MapExpr (guid, mapCode) -> 
                                 let var = Var(sprintf "`%A`" guid, mapCode.Type)
                                 (var|> Expr.Var, [mapCode], [var]) :: acc
-                            |FoldExpr (foldCode, subCodes, varList) ->
+                            |ReduceExpr (foldCode, subCodes, varList) ->
                                 (foldCode, subCodes, varList) :: acc)
 
                 let exprList = exprAcc |> List.collect (fun (_, b, _) -> b)
                 let guidList = exprAcc |> List.collect (fun (_, _, c) -> c)
                 let combinedExpr = RebuildShapeCombination(shapeComboObject, exprAcc|> List.rev |> List.map (fun (a, _, _) -> a))
-                FoldExpr(combinedExpr, exprList, guidList)
+                ReduceExpr(combinedExpr, exprList, guidList)
                 
-        | ShapeLambda (var, expr) -> seperateFoldVariables foldVar expr array
+        | ShapeLambda (var, expr) -> seperateReductionVariable foldVar expr array
 
 
     /// recursively break apart the tree containing standard F# functions and recompose it using CUDA functions
@@ -277,10 +277,6 @@ module private DeviceArrayOps =
             |ResComputeArray devArray -> devArray
             |_ -> failwith "Return type was not a device array"
 
-    /// Map involving 3 arrays
-    let private map3 (code : Expr<'a->'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) (array3 : devicearray<'a>) =
-        mapN code [array1.DeviceArray; array2.DeviceArray; array3.DeviceArray]
-
     /// builds a new array whose elements are the results of applying the given function to each element of the array.
     let map (code : Expr<'a->'b>) (array : devicearray<'a>) =
         let result = mapN code [array.DeviceArray]
@@ -290,6 +286,10 @@ module private DeviceArrayOps =
     let map2 (code : Expr<'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) =
         let result = mapN code [array1.DeviceArray; array2.DeviceArray]
         devicearray<'b>(result)
+
+    /// Map involving 3 arrays
+    let private map3 (code : Expr<'a->'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) (array3 : devicearray<'a>) =
+        mapN code [array1.DeviceArray; array2.DeviceArray; array3.DeviceArray]
 
     /// builds a new array whose elements are the results of applying the given function to each element of the array and a specified number of its neighbours
     let mapNeighbours (neighbourSpec : NeighbourMapping<'a,'b>) mapLengthSpec (inArray : devicearray<'a>) =
@@ -349,12 +349,12 @@ module private DeviceArrayOps =
         let arrayRes = ComputeArray(array.DeviceArray.ArrayType, cudaPtr, length, FullArray, UserGenerated)
         devicearray<'a>(arrayRes)
 
-    let evaluateMapsAndReconstructFold (code : Expr<'a -> 'b -> 'a>) (array : devicearray<'b>) =
+    let evaluateMapsAndReconstructReduction (code : Expr<'a -> 'b -> 'a>) (array : devicearray<'b>) =
         match code with
         |ShapeLambda (var, expr) ->
-            let foldResults = seperateFoldVariables var expr array
+            let foldResults = seperateReductionVariable var expr array
             match foldResults with
-            |FoldExpr (foldExpr, mapExrList, varList) ->
+            |ReduceExpr (foldExpr, mapExrList, varList) ->
                 let mapResults = mapExrList |> List.map (fun mapExpr -> 
                     let funWithLambda = reApplyLambdas expr [] mapExpr
                     mapN funWithLambda [array.DeviceArray])
@@ -366,11 +366,11 @@ module private DeviceArrayOps =
             |_ -> failwith "Error"
         |_ -> failwith "Error"
 
-
     /// Reduction functions
     module TypedReductions =
+        /// The reduction function on floating point numbers
         let assocReduceFloat code (array : devicearray<devicefloat>) =
-
+            /// Apply reduction to element 1 and element 2 and reduce the result to an array of half size
             let offsetMap (code : Expr<devicefloat -> devicefloat -> devicefloat>) (array1 : ComputeArray) (array2 : ComputeArray) =
                 let result = (mapN code [array1; array2]) 
                 let mutable cudaPtr = System.IntPtr(0)
@@ -378,7 +378,7 @@ module private DeviceArrayOps =
                 DeviceInterop.createUninitialisedCUDADoubleArray(len, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
                 DeviceFloatKernels.reduceToHalf(result.CudaPtr, 0, result.Length, cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck // reduce the resulting array to half size
                 ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, len, FullArray, AutoGenerated)
-
+            /// Recursively apply the reduction to element X_i and X_i+1 and merge the results until only one element remains
             let rec assocReduceFloatIntrnl (code : Expr<devicefloat -> devicefloat -> devicefloat>) (array : ComputeArray) =
                 match (array.Length) with
                 |0 -> 
@@ -389,10 +389,11 @@ module private DeviceArrayOps =
                     let array1 = createArrayOffset 0 (None) array
                     let array2 = createArrayOffset 1 (None) array
                     let newArr = offsetMap code array1 array2 // evaluate reduction on X_i and X_i+1
+                    array.Dispose()
                     assocReduceFloatIntrnl code newArr // repeat until array of size 1
-
+            // seperate off first element, apply maps to the remaining elements and merge the results
             let arrayMinusFirst = createArrayOffset 1 (None) array.DeviceArray |> devicearray<devicefloat>
-            let foldExpr, mapResults = evaluateMapsAndReconstructFold code arrayMinusFirst
+            let foldExpr, mapResults = evaluateMapsAndReconstructReduction code arrayMinusFirst
             match List.length mapResults with
             |1 ->
                 let foldExpr = Expr<devicefloat -> devicefloat -> devicefloat>.Cast foldExpr
@@ -402,8 +403,9 @@ module private DeviceArrayOps =
                 let tailDevArray = assocReduceFloatIntrnl (foldExpr) devArray
                 offsetMap foldExpr fstDevArray tailDevArray |> devicearray<devicefloat> |> Array.ofDeviceArray |> Array.head
             |_ ->
-                failwith "error"
+                raise <| System.InvalidOperationException("Reduction operation ended in an invalid state.")
 
+        /// Function for summation of floating point numbers
         let sumTotal (code : Expr<devicefloat -> devicefloat>) (array : devicearray<devicefloat>) =
             let result = (mapN code [array.DeviceArray])
             let mutable cudaPtr = System.IntPtr(0)
@@ -412,6 +414,7 @@ module private DeviceArrayOps =
             let resultArr = ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, 1, FullArray, AutoGenerated)
             resultArr |> devicearray<devicefloat> |> Array.ofDeviceArray |> Array.head
 
+        /// Function for averaging of floating point numbers
         let average (code : Expr<devicefloat -> devicefloat>) (array : devicearray<devicefloat>) =
             (sumTotal code array) / (float array.DeviceArray.Length)
             
@@ -481,10 +484,6 @@ type DeviceArray =
     // REDUCTIONS
     // ----------
 
-    /// applies an associative reduction to the device array (the supplied function must be associative or this function will produce unexpected results)
-    //static member associativeReduce ([<ReflectedDefinition()>] code : Expr<devicefloat -> devicefloat -> devicefloat>) =
-    //    DeviceArrayOps.TypedReductions.assocReduceFloat code
-
     /// Returns the sum of each element of the device array.
     static member sum() =
         DeviceArrayOps.TypedReductions.sumTotal <@ id : devicefloat -> devicefloat @>
@@ -501,10 +500,8 @@ type DeviceArray =
     static member average() =
         DeviceArrayOps.TypedReductions.average <@ id : devicefloat -> devicefloat  @>
 
+    /// Applies a function to each element of in the array and merging the results into an array of half size recursively until all elements in the array have been merged.
+    /// Note: The function which merges the accumulator and the element MUST be associative or this function will produce unexpected results.
     static member associativeReduce ([<ReflectedDefinition()>] code : Expr<devicefloat -> devicefloat -> devicefloat>) =
         DeviceArrayOps.TypedReductions.assocReduceFloat code
-
-//    static member foldTest ([<ReflectedDefinition()>] expr) =
-//        DeviceArrayOps.evaluateMapsAndReconstructFold expr
-
 

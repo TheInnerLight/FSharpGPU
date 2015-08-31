@@ -41,8 +41,8 @@ type TimerBuilder() =
 [<EntryPoint>]
 let main argv = 
     //let array = Array.init (16) (fun i -> (float i) + 2.0 )
-    let array = Array.init (15) (fun i -> float i + 5.0)
-    let array2 = Array.init (5000000) (fun i -> float (i*2))
+    let array = Array.init (15000000) (fun i -> float i + 5.0)
+    let array2 = Array.init (15000000) (fun i -> float (i*2))
     let array3 = Array.init 15000000 (fun i-> float i)
     let array4 = Array.init 1500000 (fun i-> float i)
 
@@ -53,13 +53,14 @@ let main argv =
         let! cudaArray2 = DeviceArray.ofArray array2
         let! cudaArray3 = DeviceArray.ofArray array3
         let! cudaArray4 = DeviceArray.ofArray array4
+        do! cudaArray |> DeviceArray.map id |> ignore
         printfn ""
         printfn "CUDA"
         printfn ""
+       
 
-        let test = cudaArray |> DeviceArray.associativeReduce (fun acc value -> acc * (6.0 * value))
-        let testCPU = array |> Array.reduce (fun acc value -> acc * (6.0 * value))
-        let testCPU2 = array |> Array.sumBy (fun v -> v*6.0)
+        let test = cudaArray |> DeviceArray.associativeReduce (fun acc value -> acc + (6.0 * value))
+        let testCPU = array |> Array.reduce (fun acc value -> acc + (6.0 * value))
 
         let test2 = cudaArray |> DeviceArray.associativeReduce (fun acc x -> acc + (sin x))
         let testCPU2 = array |> Array.reduce (fun acc x -> acc + (sin x))

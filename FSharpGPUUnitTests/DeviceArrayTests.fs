@@ -135,6 +135,7 @@ type DevieArrayUnitTests() =
     member x.SummationTests () = 
         let rnd = Random()
         let tolerance = 1e-9
+        // tests
         let array = Array.init (3571) (fun i -> rnd.NextDouble())
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> x * 2.0)
@@ -164,4 +165,21 @@ type DevieArrayUnitTests() =
         let cudaArray = DeviceArray.ofArray array
         let cudaResult = cudaArray |> DeviceArray.sumBy (fun x -> x ** 0.4)
         let cpuResult = array |> Array.sumBy (fun x -> x ** 0.4)
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
+
+    [<TestMethod>]
+    member x.ReductionTests () = 
+        let rnd = Random()
+        let tolerance = 1e-9
+        // test 1
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.associativeReduce (fun acc value -> acc + (6.0 * value))
+        let cpuResult = array |> Array.reduce (fun acc value -> acc + (6.0 * value))
+        Assert.AreEqual(cpuResult, cudaResult, tolerance)
+        // test 2
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaResult = cudaArray |> DeviceArray.associativeReduce (fun acc x -> acc + (sin x))
+        let cpuResult = array |> Array.reduce (fun acc x -> acc + (sin x))
         Assert.AreEqual(cpuResult, cudaResult, tolerance)
