@@ -76,14 +76,9 @@ type Array =
                                     |_ -> true)
         |_ -> failwith "Invalid type"
 
-type SepFold =
-    |VariableExpr of Var option * Expr
-    |ManyVarExpr of Map<Var, Expr>
-
-type SepFoldExpr =
+type private SepFoldExpr =
     |MapExpr of System.Guid * Expr 
     |ReduceExpr of Expr  * Expr list * Var list
-
 
 /// Basic operation implementation on Device Arrays
 module private DeviceArrayOps =

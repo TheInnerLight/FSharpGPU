@@ -102,36 +102,67 @@ type devicebool = class
 /// A (double precision) floating point number which resides in device memory
 type devicefloat =
     interface IGPUType
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( + ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( + ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( + ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( - ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( - ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( - ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( * ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( * ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( * ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( / ) (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( / ) (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member ( / ) (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Pow (flt1 : devicefloat, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Pow (flt1 : devicefloat, flt2 : float) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Pow (flt1 : float, flt2 : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Sin (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Cos (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Tan (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Sinh (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Cosh (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Tanh (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Asin (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Acos (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Atan (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Sqrt (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Log (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Log10 (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member Exp (flt : devicefloat) : devicefloat = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member CompareTo (flt1 : devicefloat, flt2 : float) = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member CompareTo (flt1 : devicefloat, flt2 : devicefloat) = DeviceError.raiseNotSupportedOperation()
+    /// This method exists to create correct type-checking behaviour of device expressions.  It should not be called directly.
     static member CompareTo (flt1 : float, flt2 : devicefloat) = DeviceError.raiseNotSupportedOperation()
 
 [<AutoOpen>]
