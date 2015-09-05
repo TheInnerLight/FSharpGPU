@@ -175,6 +175,11 @@ module internal DeviceFloatKernels =
     [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddfilter", CallingConvention = CallingConvention.Cdecl)>]
     extern int filter(IntPtr inArr, IntPtr predArr, int inputN, IntPtr outArr, int& size)
 
+    // Float mutation
+
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddsetAll", CallingConvention = CallingConvention.Cdecl)>]
+    extern int setAllElementsToConstant(IntPtr inArr, int inputOffset, int inputN, double value)
+
 module internal DeviceBoolKernels = 
 
     // Bool to Bool maps

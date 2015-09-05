@@ -693,3 +693,15 @@ int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *
 	cudaFree(prefixSum);
 	return cudaGetLastError();
 }
+
+/******************************************************************************************************************/
+/* mutation */
+/******************************************************************************************************************/
+
+/* Function for setting all the elements to a constant value */
+int ddsetAll(double *arr, const int offset, const int n, const double value)
+{
+	ThreadBlocks tb = getThreadsAndBlocks(n);
+	_kernel_set_all_elements_to_constant<double> << < tb.blockCount, tb.threadCount >> >(arr, offset, tb, value);
+	return cudaGetLastError();
+}

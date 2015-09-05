@@ -86,6 +86,19 @@ module private DeviceArrayOps =
     let length (array : devicearray<'a>) =
         array.DeviceArray.Length
 
+    let private fillFloat length value =
+        let mutable cudaPtr = System.IntPtr(0)
+        DeviceInterop.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        DeviceFloatKernels.setAllElementsToConstant(cudaPtr, 0, length, 0.0) |> DeviceInterop.cudaCallWithExceptionCheck
+        ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, length, FullArray, UserGenerated)
+
+    let zeroCreate<'a when 'a :> IGPUType> (length : int) =
+        match typeof<'a> with
+        |x when x = typeof<devicefloat> ->
+            new devicearray<'a>(fillFloat length 0.0)
+        |_ ->
+            failwith "No other types currently supported"
+
     let rec reApplyLambdas originalExpr varList newExpr =
         match originalExpr with
         |ShapeLambda (var, expr) ->
@@ -335,6 +348,7 @@ module private DeviceArrayOps =
                     (createArrayOffset 2 (Some <| array1.Length-4) result) // shrinking case : 4 elements shorter with 2 positive offset
         devicearray<'b>(result) // convert typeless result to typed device array
 
+    /// filters the array using a stable filter
     let filter (code : Expr<'a->devicebool>) (array : devicearray<'a>) =
         let result = mapN code [array.DeviceArray]
         let mutable length = 0
@@ -453,6 +467,11 @@ type DeviceArray =
     /// Returns the length of the device array
     static member length array =
         DeviceArrayOps.length array
+    /// Creates a device array of all zero elements
+    static member zeroCreate length =
+        DeviceArrayOps.zeroCreate length
+
+
     //
     // MAPS
     // ----
@@ -471,7 +490,8 @@ type DeviceArray =
     // FILTERS
     // ----
 
-    /// Returns a new array containing only the elements of the array for which the given predicate returns true.
+    /// Returns a new array containing only the elements of the array for which the given predicate returns true.  This operation performs a stable filter, i.e. does not change the order
+    /// of the elements.
     static member filter ([<ReflectedDefinition>] expr) =
         DeviceArrayOps.filter expr
 

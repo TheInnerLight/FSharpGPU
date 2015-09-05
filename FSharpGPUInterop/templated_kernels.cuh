@@ -160,6 +160,20 @@ __global__ void _kernel_map2_op(T *input1Arr, const int input1Offset, T *input2A
 	}
 }
 
+template<typename T>
+__global__ void _kernel_set_all_elements_to_constant(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T value)
+{
+	T val;
+	for (int i = 0; i < inputN.loopCount; ++i)
+	{
+		int pos = i*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x + inputOffset;
+		if (pos < inputN.N)
+		{
+			inputArr[pos] = value;
+		}
+	}
+}
+
 /* Reduce to half the size */
 template<typename T>
 __global__ void _kernel_reduce_to_half(T *inputArr, const int inputOffset, const ThreadBlocks inputN, T *outputArr)
