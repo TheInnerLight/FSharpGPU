@@ -20,8 +20,8 @@
 
 #pragma once
 
-const int MAX_BLOCKS = 65535;
-const int MAX_THREADS = 512;
+const int MAX_BLOCKS = 32768;
+const int MAX_THREADS = 256;
 
 struct ThreadBlocks{
 	int threadCount;

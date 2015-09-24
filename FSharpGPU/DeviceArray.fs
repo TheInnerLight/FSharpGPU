@@ -58,7 +58,7 @@ type Array =
     static member ofDeviceArray (array : devicearray<devicefloat>) =
         let devArray = array.DeviceArray
         match devArray.ArrayType with
-        |ComputeResult.ResComputeFloat v ->
+        |ComputeDataType.ComputeFloat ->
             let hostArray = Array.zeroCreate<float> (devArray.Length)
             DeviceInterop.retrieveCUDADoubleArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
             hostArray
@@ -68,7 +68,7 @@ type Array =
     static member ofDeviceArray (array : devicearray<devicebool>) =
         let devArray = array.DeviceArray
         match devArray.ArrayType with
-        |ComputeResult.ResComputeBool v ->
+        |ComputeDataType.ComputeBool ->
             let hostArray = Array.zeroCreate<int> (devArray.Length)
             DeviceInterop.retrieveCUDABoolArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
             hostArray |> Array.map (function
@@ -80,25 +80,36 @@ type private SepFoldExpr =
     |MapExpr of System.Guid * Expr 
     |ReduceExpr of Expr  * Expr list * Var list
 
+module private DeviceArrayInitialisation =
+    /// create and fill a device array of all floats with a specific value
+    let fillFloat length value =
+        let mutable cudaPtr = System.IntPtr(0)
+        DeviceInterop.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        DeviceFloatKernels.setAllElementsToConstant(cudaPtr, 0, length, value) |> DeviceInterop.cudaCallWithExceptionCheck
+        ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, length, FullArray, UserGenerated)
+    /// create and fill a device array of all floats with a specific value
+    let fillBool length value =
+        let mutable cudaPtr = System.IntPtr(0)
+        DeviceInterop.createUninitialisedCUDABoolArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        //DeviceFloatKernels.setAllElementsToConstant(cudaPtr, 0, length, 0.0) |> DeviceInterop.cudaCallWithExceptionCheck
+        ComputeArray(ComputeDataType.ComputeBool, cudaPtr, length, FullArray, UserGenerated)
+
 /// Basic operation implementation on Device Arrays
 module private DeviceArrayOps =
     /// Returns the length of the device array
     let length (array : devicearray<'a>) =
         array.DeviceArray.Length
 
-    let private fillFloat length value =
-        let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        DeviceFloatKernels.setAllElementsToConstant(cudaPtr, 0, length, 0.0) |> DeviceInterop.cudaCallWithExceptionCheck
-        ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, length, FullArray, UserGenerated)
-
     let zeroCreate<'a when 'a :> IGPUType> (length : int) =
         match typeof<'a> with
         |x when x = typeof<devicefloat> ->
-            new devicearray<'a>(fillFloat length 0.0)
+            new devicearray<'a>(DeviceArrayInitialisation.fillFloat length 0.0)
+        |x when x = typeof<devicebool> ->
+            new devicearray<'a>(DeviceArrayInitialisation.fillBool length false)
         |_ ->
             failwith "No other types currently supported"
 
+    /// Re-applys the lambdas from the start of a reduction expression to the map expressions
     let rec reApplyLambdas originalExpr varList newExpr =
         match originalExpr with
         |ShapeLambda (var, expr) ->
@@ -107,7 +118,7 @@ module private DeviceArrayOps =
             let acc = Expr.Lambda(varList |> List.head, newExpr)
             (acc, varList |> List.tail) ||> List.fold (fun acc v -> Expr.Lambda(v, acc))
             
-    
+    /// Seperates the reduction variable from the constant variables in an expression
     let rec seperateReductionVariable foldVar code (array : devicearray<'a>)  =
         let genGuid() = System.Guid.NewGuid()
         match code with
@@ -377,42 +388,46 @@ module private DeviceArrayOps =
 
     /// Reduction functions
     module TypedReductions =
-        /// The reduction function on floating point numbers
-        let assocReduceFloat code (array : devicearray<devicefloat>) =
+        /// General higher order reduction function
+        let inline assocReduce reduceFunc computeDataType (code : Expr<'a -> 'a -> 'a>) (array : devicearray<'a>) =
             /// Apply reduction to element 1 and element 2 and reduce the result to an array of half size
-            let offsetMap (code : Expr<devicefloat -> devicefloat -> devicefloat>) (array1 : ComputeArray) (array2 : ComputeArray) =
+            let offsetMap (code : Expr<'a -> 'a -> 'a>) (array1 : ComputeArray) (array2 : ComputeArray) =
                 let result = (mapN code [array1; array2]) 
-                let mutable cudaPtr = System.IntPtr(0)
-                let len = if result.Length % 2 = 0 then result.Length / 2 else result.Length / 2 + 1
-                DeviceInterop.createUninitialisedCUDADoubleArray(len, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-                DeviceFloatKernels.reduceToHalf(result.CudaPtr, 0, result.Length, cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck // reduce the resulting array to half size
-                ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, len, FullArray, AutoGenerated)
+                let ca = GeneralDeviceKernels.reduceToEvenIndices result
+                reduceFunc(result.CudaPtr, 0, result.Length, ca.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck // reduce the resulting array to half size
+                result.Dispose()
+                ca
             /// Recursively apply the reduction to element X_i and X_i+1 and merge the results until only one element remains
-            let rec assocReduceFloatIntrnl (code : Expr<devicefloat -> devicefloat -> devicefloat>) (array : ComputeArray) =
+            let rec assocReduceIntrnl (code : Expr<'a -> 'a -> 'a>) (array : ComputeArray) =
                 match (array.Length) with
                 |0 -> 
                     raise <| System.ArgumentException("array cannot be empty", "array")
                 |1 ->
-                    array //|> devicearray<devicefloat> |> Array.ofDeviceArray |> Array.head
+                    array 
                 |_ ->
                     let array1 = createArrayOffset 0 (None) array
                     let array2 = createArrayOffset 1 (None) array
                     let newArr = offsetMap code array1 array2 // evaluate reduction on X_i and X_i+1
                     array.Dispose()
-                    assocReduceFloatIntrnl code newArr // repeat until array of size 1
+                    assocReduceIntrnl code newArr // repeat until array of size 1
             // seperate off first element, apply maps to the remaining elements and merge the results
-            let arrayMinusFirst = createArrayOffset 1 (None) array.DeviceArray |> devicearray<devicefloat>
+            let arrayMinusFirst = createArrayOffset 1 (None) array.DeviceArray |> devicearray<'a>
             let foldExpr, mapResults = evaluateMapsAndReconstructReduction code arrayMinusFirst
             match List.length mapResults with
             |1 ->
-                let foldExpr = Expr<devicefloat -> devicefloat -> devicefloat>.Cast foldExpr
+                let foldExpr = Expr<'a -> 'a -> 'a>.Cast foldExpr
                 let devArray = List.head mapResults
                 let devArray = createArrayOffset 0 (Some <| devArray.Length - 1) devArray
                 let fstDevArray = createArrayOffset 0 (Some 1) array.DeviceArray
-                let tailDevArray = assocReduceFloatIntrnl (foldExpr) devArray
-                offsetMap foldExpr fstDevArray tailDevArray |> devicearray<devicefloat> |> Array.ofDeviceArray |> Array.head
+                let tailDevArray = assocReduceIntrnl (foldExpr) devArray
+                offsetMap foldExpr fstDevArray tailDevArray |> devicearray<'a> 
             |_ ->
                 raise <| System.InvalidOperationException("Reduction operation ended in an invalid state.")
+        /// Reduction function on floating point numbers
+        let assocReduceFloat code (array : devicearray<devicefloat>) =
+            assocReduce DeviceFloatKernels.reduceToHalf ComputeDataType.ComputeFloat code array 
+            |> Array.ofDeviceArray 
+            |> Array.head
 
         /// Function for summation of floating point numbers
         let sumTotal (code : Expr<devicefloat -> devicefloat>) (array : devicearray<devicefloat>) =
@@ -420,7 +435,7 @@ module private DeviceArrayOps =
             let mutable cudaPtr = System.IntPtr(0)
             DeviceInterop.createUninitialisedCUDADoubleArray(1, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
             DeviceFloatKernels.sumTotal(result.CudaPtr, 0, result.Length, cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck // reduce the resulting array to half size
-            let resultArr = ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, 1, FullArray, AutoGenerated)
+            let resultArr = ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, 1, FullArray, AutoGenerated)
             resultArr |> devicearray<devicefloat> |> Array.ofDeviceArray |> Array.head
 
         /// Function for averaging of floating point numbers
@@ -458,12 +473,12 @@ type DeviceArray =
     static member ofArray (array : float[]) =
         let mutable cudaPtr = System.IntPtr(0)
         DeviceInterop.initialiseCUDADoubleArray(array, Array.length array, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        new devicearray<devicefloat>(ComputeArray(ComputeResult.ResComputeFloat(0.0), cudaPtr, Array.length array, FullArray, UserGenerated))
+        new devicearray<devicefloat>(ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, Array.length array, FullArray, UserGenerated))
     /// Converts a standard host array of bools into a device array of devicebools
     static member ofArray (array : bool[]) =
         let mutable cudaPtr = System.IntPtr(0)
         DeviceInterop.initialiseCUDABoolArray(array, Array.length array, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        new devicearray<devicefloat>(ComputeArray(ComputeResult.ResComputeBool(false), cudaPtr, Array.length array, FullArray, UserGenerated))
+        new devicearray<devicefloat>(ComputeArray(ComputeDataType.ComputeBool, cudaPtr, Array.length array, FullArray, UserGenerated))
     /// Returns the length of the device array
     static member length array =
         DeviceArrayOps.length array

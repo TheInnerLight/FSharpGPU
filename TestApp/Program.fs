@@ -38,8 +38,67 @@ type TimerBuilder() =
         lastMillis <- elapsedMillis
         a
 
-[<EntryPoint>]
-let main argv = 
+let createTimerData() =
+    let seq1 = seq { for i in 15..24 -> 2.0 ** float i |> int}
+    let timer = TimerBuilder()
+    let rnd = System.Random()
+
+    let array = Array.init (1) (fun i -> float i) |> DeviceArray.ofArray |> DeviceArray.map (fun x -> x*2.0)
+
+    let repeatAndTime repetitions action =
+        let timer = System.Diagnostics.Stopwatch()
+        timer.Start()
+        Seq.init repetitions id |> Seq.iter (fun i -> action())
+        timer.Stop()
+        timer.ElapsedMilliseconds / int64 repetitions
+
+    seq1 |> Seq.iter (fun i ->
+            let array = Array.init (i) (fun i -> rnd.NextDouble())
+            use devArray = DeviceArray.ofArray array
+            let cpuTime = repeatAndTime 5 (fun x -> array |> Array.map (fun x -> sin x) |> ignore)
+            let gpuTime = repeatAndTime 5 (fun x -> 
+                use a = devArray |> DeviceArray.map (fun x -> sin x) 
+                a |> Array.ofDeviceArray |> ignore)
+            printfn "%d, %d, %d" i cpuTime gpuTime)
+
+    seq1 |> Seq.iter (fun i ->
+            let array = Array.init (i) (fun i -> rnd.NextDouble())
+            use devArray = DeviceArray.ofArray array
+            let cpuTime = repeatAndTime 5 (fun x -> array |> Array.map (fun x -> 3.0 * x ** 4.0 + 1.5 * x ** 1.0 + 2.0) |> ignore)
+            let gpuTime = repeatAndTime 5 (fun x -> 
+                use a = devArray |> DeviceArray.map (fun x -> 3.0 * x ** 4.0 + 1.5 * x ** 1.0 + 2.0) 
+                a |> Array.ofDeviceArray |> ignore)
+            printfn "%d, %d, %d" i cpuTime gpuTime)
+
+    seq1 |> Seq.iter (fun i ->
+            let array = Array.init (i) (fun i -> rnd.NextDouble())
+            use devArray = DeviceArray.ofArray array
+            let cpuTime = repeatAndTime 5 (fun x -> array |> Array.filter (fun x -> x > 0.5) |> ignore)
+            let gpuTime = repeatAndTime 5 (fun x -> 
+                use a = devArray |> DeviceArray.filter (fun x -> x .>. 0.5) 
+                a |> Array.ofDeviceArray |> ignore)
+            printfn "%d, %d, %d" i cpuTime gpuTime)
+
+
+    seq1 |> Seq.iter (fun i ->
+            let array = Array.init (i) (fun i -> rnd.NextDouble())
+            use devArray = DeviceArray.ofArray array
+            let cpuTime = repeatAndTime 5 (fun x -> array |> Array.reduce (fun x y -> x + sin y) |> ignore)
+            let gpuTime = repeatAndTime 5 (fun x -> devArray |> DeviceArray.associativeReduce (fun x y -> x + sin y) |> ignore)
+            printfn "%d, %d, %d" i cpuTime gpuTime)
+
+    seq1 |> Seq.iter (fun i ->
+            let array = Array.init (i) (fun i -> rnd.NextDouble())
+            use devArray = DeviceArray.ofArray array
+            let cpuTime = repeatAndTime 5 (fun x -> array |> Array.reduce (fun x y -> x + sqrt y) |> ignore)
+            let gpuTime = repeatAndTime 5 (fun x -> devArray |> DeviceArray.associativeReduce (fun x y -> x + sqrt y) |> ignore)
+            printfn "%d, %d, %d" i cpuTime gpuTime)
+
+    
+
+
+
+let main2 argv = 
     //let array = Array.init (16) (fun i -> (float i) + 2.0 )
     let array = Array.init (7500000) (fun i -> float i + 5.0)
     let array2 = Array.init (7500000) (fun i -> float (i*2))
@@ -51,7 +110,6 @@ let main argv =
         do! ignore()
         let! cudaArray = DeviceArray.ofArray array
         let! cudaArray2 = DeviceArray.ofArray array2
-        let! cudaArray3 = DeviceArray.ofArray array3
         let! cudaArray4 = DeviceArray.ofArray array4
         do! cudaArray |> DeviceArray.map id |> ignore
 
@@ -116,3 +174,8 @@ let main argv =
         return ()
         }
     0 // return an integer exit code
+
+[<EntryPoint>]
+let main argv =
+    createTimerData()
+    0

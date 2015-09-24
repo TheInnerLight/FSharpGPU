@@ -23,7 +23,7 @@ open NovelFS.FSharpGPU
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
 [<TestClass>]
-type DevieArrayUnitTests() = 
+type DeviceArrayUnitTests() = 
     /// Unit tests for DeviceArray.map
     [<TestMethod>]
     member x.MapTests () = 
