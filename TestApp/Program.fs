@@ -52,34 +52,47 @@ let createTimerData() =
         timer.Stop()
         timer.ElapsedMilliseconds / int64 repetitions
 
+    printfn "map sin x"
     seq1 |> Seq.iter (fun i ->
             let array = Array.init (i) (fun i -> rnd.NextDouble())
             use devArray = DeviceArray.ofArray array
             let cpuTime = repeatAndTime 5 (fun x -> array |> Array.map (fun x -> sin x) |> ignore)
             let gpuTime = repeatAndTime 5 (fun x -> 
                 use a = devArray |> DeviceArray.map (fun x -> sin x) 
-                a |> Array.ofDeviceArray |> ignore)
+                a |> ignore)
             printfn "%d, %d, %d" i cpuTime gpuTime)
 
+    printfn "map 3x^4 + 1.5x + 2.0"
     seq1 |> Seq.iter (fun i ->
             let array = Array.init (i) (fun i -> rnd.NextDouble())
             use devArray = DeviceArray.ofArray array
             let cpuTime = repeatAndTime 5 (fun x -> array |> Array.map (fun x -> 3.0 * x ** 4.0 + 1.5 * x ** 1.0 + 2.0) |> ignore)
             let gpuTime = repeatAndTime 5 (fun x -> 
                 use a = devArray |> DeviceArray.map (fun x -> 3.0 * x ** 4.0 + 1.5 * x ** 1.0 + 2.0) 
-                a |> Array.ofDeviceArray |> ignore)
+                a |> ignore)
             printfn "%d, %d, %d" i cpuTime gpuTime)
-
+    
+    printfn "filter > 0.5"
     seq1 |> Seq.iter (fun i ->
             let array = Array.init (i) (fun i -> rnd.NextDouble())
             use devArray = DeviceArray.ofArray array
             let cpuTime = repeatAndTime 5 (fun x -> array |> Array.filter (fun x -> x > 0.5) |> ignore)
             let gpuTime = repeatAndTime 5 (fun x -> 
                 use a = devArray |> DeviceArray.filter (fun x -> x .>. 0.5) 
-                a |> Array.ofDeviceArray |> ignore)
+                a |> ignore)
             printfn "%d, %d, %d" i cpuTime gpuTime)
 
+    printfn "filter > 0.9"
+    seq1 |> Seq.iter (fun i ->
+            let array = Array.init (i) (fun i -> rnd.NextDouble())
+            use devArray = DeviceArray.ofArray array
+            let cpuTime = repeatAndTime 5 (fun x -> array |> Array.filter (fun x -> x > 0.9) |> ignore)
+            let gpuTime = repeatAndTime 5 (fun x -> 
+                use a = devArray |> DeviceArray.filter (fun x -> x .>. 0.9) 
+                a |> ignore)
+            printfn "%d, %d, %d" i cpuTime gpuTime)
 
+    printfn "reduce x + sin y"
     seq1 |> Seq.iter (fun i ->
             let array = Array.init (i) (fun i -> rnd.NextDouble())
             use devArray = DeviceArray.ofArray array
@@ -87,11 +100,20 @@ let createTimerData() =
             let gpuTime = repeatAndTime 5 (fun x -> devArray |> DeviceArray.associativeReduce (fun x y -> x + sin y) |> ignore)
             printfn "%d, %d, %d" i cpuTime gpuTime)
 
+    printfn "reduce x + sqrt y"
     seq1 |> Seq.iter (fun i ->
             let array = Array.init (i) (fun i -> rnd.NextDouble())
             use devArray = DeviceArray.ofArray array
             let cpuTime = repeatAndTime 5 (fun x -> array |> Array.reduce (fun x y -> x + sqrt y) |> ignore)
             let gpuTime = repeatAndTime 5 (fun x -> devArray |> DeviceArray.associativeReduce (fun x y -> x + sqrt y) |> ignore)
+            printfn "%d, %d, %d" i cpuTime gpuTime)
+
+    printfn "sum"
+    seq1 |> Seq.iter (fun i ->
+            let array = Array.init (i) (fun i -> rnd.NextDouble())
+            use devArray = DeviceArray.ofArray array
+            let cpuTime = repeatAndTime 5 (fun x -> array |> Array.sum |> ignore)
+            let gpuTime = repeatAndTime 5 (fun x -> devArray |> DeviceArray.sum |> ignore)
             printfn "%d, %d, %d" i cpuTime gpuTime)
 
     
@@ -133,8 +155,8 @@ let main2 argv =
         //let! result2 = cudaArray |> CudaArray.map (fun x -> x > 5.0 ) |> Array.ofCudaArray
         printfn "7.5 million element (x2) map2 function"
         use! result3 = (cudaArray,cudaArray2) ||> DeviceArray.map2 (fun x y ->  x * sqrt y .>. 123.5)
-        printfn "7.5 million element summation function"
-        use! result4 = cudaArray4 |> DeviceArray.sumBy (fun x -> x + 1.0)
+        //printfn "7.5 million element summation function"
+        //use! result4 = cudaArray4 |> DeviceArray.sumBy (fun x -> x + 1.0)
         //let! result3a = cudaArray |> DeviceArray.map (fun x -> x) |> Array.ofDeviceArray
         //let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2 * l + 0.2 * r)) Preserve |> Array.ofDeviceArray
         //let! result3a = cudaArray |> DeviceArray.mapNeighbours (Stencils.Stencil3 (fun x l r -> x + 0.2*l + 0.2*r)) Preserve |> Array.ofDeviceArray
@@ -155,8 +177,8 @@ let main2 argv =
         let! result2bCPU = array |> Array.filter (fun x -> x < 100.0 )
         printfn "7.5 million element (x2) map2 function"
         let! result3CPU = (array, array2) ||> Array.map2 (fun x y -> x * sqrt y > 123.5  ) 
-        printfn "7.5 million element summation function"
-        let! result4CPU = array4 |> Array.sumBy (fun x -> x + 1.0)
+        //printfn "7.5 million element summation function"
+        //let! result4CPU = array4 |> Array.sumBy (fun x -> x + 1.0)
         //let! result4CPU = array3 |> Array.reduce (fun x y -> x + y )
         printfn "..."
         //printfn "%A" result
@@ -169,13 +191,15 @@ let main2 argv =
         printfn "%A" result2b
         printfn "%A" result2bCPU
         printfn "%A" array
-        printfn "%A" result4
-        printfn "%A" result4CPU
+        //printfn "%A" result4
+        //printfn "%A" result4CPU
         return ()
         }
     0 // return an integer exit code
 
 [<EntryPoint>]
 let main argv =
+    //main2 argv
     createTimerData()
+    System.Console.ReadKey()
     0

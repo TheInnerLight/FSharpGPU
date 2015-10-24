@@ -56,6 +56,9 @@ type internal ComputeArray internal (arrayType : ComputeDataType, cudaPtr : Syst
     member this.Length = length
     member this.Dispose() = cleanup()
     override this.Finalize() = cleanup()
+
+    interface System.IDisposable with
+        member this.Dispose() = this.Dispose()
         
 /// Result of breaking down an expression is either an array or just a primitive
 and internal ComputeResult =
@@ -63,12 +66,7 @@ and internal ComputeResult =
     |ResComputeFloat of float
     |ResComputeFloat32 of float32
     |ResComputeBool of bool
-    member this.Length =
-        match this with
-        |ResComputeArray devArray -> devArray.Length
-        |ResComputeFloat devDouble -> sizeof<float>
-        |ResComputeFloat32 devFloat -> sizeof<float32>
-        |ResComputeBool devBool -> sizeof<bool>
+
     interface System.IDisposable with
         member this.Dispose() =
             match this with
@@ -82,14 +80,9 @@ and internal ComputeDataType =
     |ComputeFloat
     |ComputeFloat32
     |ComputeBool
-    member this.Length =
-        match this with
-        |ComputeFloat -> sizeof<float>
-        |ComputeFloat32 -> sizeof<float32>
-        |ComputeBool -> sizeof<float32>
 
 /// Functions to query information stored in the device array
-module internal DeviceArrayInfo = 
+module internal ComputeDataInfo = 
     let length = 
         function
         |ComputeFloat -> sizeof<float>
@@ -210,5 +203,20 @@ type devicearray<'a when 'a :> IGPUType> internal (devArray : ComputeArray) =
     override this.Finalize() = devArray.Dispose()
     interface System.IDisposable with
         member this.Dispose() = devArray.Dispose()
+
+/// The type of immutable single element of generic type which reside in device memory
+type deviceelement<'a when 'a :> IGPUType> internal (devArray : ComputeArray) = 
+    do match devArray.Length with
+        |1 -> ()
+        |_ -> raise <| System.InvalidOperationException("deviceelement must have one element")
+    member internal this.DeviceArray = devArray
+    /// Frees the device memory associated with this object
+    override this.Finalize() = devArray.Dispose()
+    interface System.IDisposable with
+        member this.Dispose() = devArray.Dispose()
+
+
+
+
     
 

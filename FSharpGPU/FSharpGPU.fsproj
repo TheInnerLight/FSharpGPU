@@ -95,6 +95,8 @@
   <ItemGroup>
     <Compile Include="DeviceLowLevel.fs" />
     <Compile Include="DeviceTypes.fs" />
+    <Compile Include="DeviceHostTransfer.fs" />
+    <Compile Include="ComputeArrays.fs" />
     <Compile Include="DeviceInterop.fs" />
     <Compile Include="DeviceArray.fs" />
     <None Include="packages.config" />

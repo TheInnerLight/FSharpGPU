@@ -125,7 +125,7 @@ extern "C" __declspec(dllexport) int ddsumTotal(double *inputArr, const int inpu
 
 /* double filters */
 
-extern "C" __declspec(dllexport) int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *outputArr, __int32 *outputN);
+extern "C" __declspec(dllexport) int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double **outputArr, __int32 *outputN);
 
 /* mutation */
 
