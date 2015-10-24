@@ -6,3 +6,5 @@ packages
 *.vsp
 .vs/config/applicationhost.config
 *.sdf
+*.zip
+*.psess
