@@ -103,8 +103,8 @@ __global__ void _kernel_ddfilter(double *inputArr, __int32 *predicateArr, const 
 __global__ void _kernel_ddfilterPrefix(double *inputArr, __int32 *prefixArr, const ThreadBlocks inputN, double *outputArr)
 {
 	for (int iter = 0; iter < inputN.loopCount; ++iter) {
-		int i = (blockIdx.x * inputN.loopCount * inputN.threadCount) + iter * inputN.threadCount + threadIdx.x;
-		if (i > 0 && prefixArr[i] > 0 && i < inputN.N) 
+		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		if (i > 0 && i < inputN.N && prefixArr[i] > 0)
 		{
 			if (prefixArr[i - 1] < prefixArr[i]) 
 			{
@@ -118,7 +118,7 @@ __global__ void _kernel_ddfilterPrefix(double *inputArr, __int32 *prefixArr, con
 __global__ void _kernel_ddinvFilterPrefix(double *inputArr, __int32 *prefixArr, const ThreadBlocks inputN, double *outputArr)
 {
 	for (int iter = 0; iter < inputN.loopCount; ++iter) {
-		int i = (blockIdx.x * inputN.loopCount * inputN.threadCount) + iter * inputN.threadCount + threadIdx.x;
+		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
 		if (prefixArr[i] > 0 && i < inputN.N)
 		{
 			if (i == 0 || prefixArr[i - 1] == prefixArr[i])
@@ -702,10 +702,8 @@ int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *
 	deallocBlockSums(sba);
 	// copy length of array
 	cudaMemcpy(outputN, prefixSum + inputN, sizeof(__int32), cudaMemcpyDeviceToHost);
-	//createCUDADoubleArray(*outputN, outputArr);
 	printf("\n%d\n", *outputN);
 	createCUDADoubleArray(*outputN, outputArr);
-	
 	// filter using prefix sum
 	_kernel_ddfilterPrefix << < tb.blockCount, tb.threadCount >> >(inputArr, prefixSum, tb, *outputArr);
 	// cleanup

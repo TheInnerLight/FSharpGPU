@@ -39,7 +39,7 @@ type TimerBuilder() =
         a
 
 let createTimerData() =
-    let seq1 = seq { for i in 15..24 -> 2.0 ** float i |> int}
+    let seq1 = seq { for i in 23..24 -> 2.0 ** float i |> int}
     let timer = TimerBuilder()
     let rnd = System.Random()
 
