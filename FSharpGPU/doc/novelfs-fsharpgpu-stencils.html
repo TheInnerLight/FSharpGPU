@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Stencils - F# GPU</title>
+    <link rel="stylesheet" href="styles.css" type="text/css" />
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--
+    acceler, a free CSS web template by ZyPOP (zypopwebtemplates.com/)
+
+    Download: http://zypopwebtemplates.com/
+
+    License: Creative Commons Attribution
+    //-->
+
+    <script type="text/javascript" src="Scripts/jquery.js"></script>
+    <script type="text/javascript" src="Scripts/slider.js"></script>
+    <script type="text/javascript" src="Scripts/superfish.js"></script>
+
+    <script type="text/javascript" src="Scripts/custom.js"></script>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
+</head>
+<body>
+    <div id="container">
+
+        <header>
+            <div class="width">
+                <h1><a href="http://novelfs.org/fsgpu">F# GPU</a></h1>
+                <nav>
+                    <ul>
+                        <li>API Documentation</li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="clear"></div>
+           
+        </header>
+        <div id="body" class="width">
+            <section id="content">
+                <article>
+                    
+
+
+
+<h1>Stencils</h1>
+<p>
+  <span>Namespace: <a href="index.html">NovelFS.FSharpGPU</a></span><br />
+</p>
+<div class="xmldoc">
+
+ A set of stencil templates for defining maps over several nearby array elements
+</br></div>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
+            ImLeft(code)
+          </code>
+          <div class="tip" id="33">
+            <strong>Signature:</strong> (code:Expr&lt;(&#39;a -&gt; &#39;a -&gt; &#39;b)&gt;) -&gt; NeighbourMapping&lt;&#39;a,&#39;b&gt;<br />
+                          <strong>Type parameters:</strong> 'a, 'b          </div>
+        </td>
+        <td class="xmldoc">
+          
+ A neighbour mapping stencil of the form X_i, and X_(i-1)
+</br>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
+            ImRight(code)
+          </code>
+          <div class="tip" id="34">
+            <strong>Signature:</strong> (code:Expr&lt;(&#39;a -&gt; &#39;a -&gt; &#39;b)&gt;) -&gt; NeighbourMapping&lt;&#39;a,&#39;b&gt;<br />
+                          <strong>Type parameters:</strong> 'a, 'b          </div>
+        </td>
+        <td class="xmldoc">
+          
+ A neighbour mapping stencil of the form X_i, and X_(i+1)
+</br>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
+            Stencil2(code)
+          </code>
+          <div class="tip" id="35">
+            <strong>Signature:</strong> (code:Expr&lt;(&#39;a -&gt; &#39;a -&gt; &#39;b)&gt;) -&gt; NeighbourMapping&lt;&#39;a,&#39;b&gt;<br />
+                          <strong>Type parameters:</strong> 'a, 'b          </div>
+        </td>
+        <td class="xmldoc">
+          
+ A neighbour mapping stencil of the form X_(i-1) and X_(i+1)
+</br>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
+            Stencil3(code)
+          </code>
+          <div class="tip" id="36">
+            <strong>Signature:</strong> (code:Expr&lt;(&#39;a -&gt; &#39;a -&gt; &#39;a -&gt; &#39;b)&gt;) -&gt; NeighbourMapping&lt;&#39;a,&#39;b&gt;<br />
+                          <strong>Type parameters:</strong> 'a, 'b          </div>
+        </td>
+        <td class="xmldoc">
+          
+ A neighbour mapping stencil of the form X_i, X_(i-1) and X_(i+1)
+</br>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
+            Stencil5(code)
+          </code>
+          <div class="tip" id="37">
+            <strong>Signature:</strong> (code:Expr&lt;(&#39;a -&gt; &#39;a -&gt; &#39;a -&gt; &#39;a -&gt; &#39;a -&gt; &#39;b)&gt;) -&gt; NeighbourMapping&lt;&#39;a,&#39;b&gt;<br />
+                          <strong>Type parameters:</strong> 'a, 'b          </div>
+        </td>
+        <td class="xmldoc">
+          
+ A neighbour mapping stencil of the form X_i, X_(i-2), X_(i-1), X_(i+1) and X_(i+2)
+</br>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+                </article>
+            </section>
+
+            <div class="clear"></div>
+        </div>
+        <footer>
+            <div class="footer-content width">
+
+                <div class="clear"></div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; Philip Curzon 2015. Web design based upon: <a href="http://zypopwebtemplates.com/">Free HTML5 Templates</a> by ZyPOP</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
