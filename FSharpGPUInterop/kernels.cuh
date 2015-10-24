@@ -127,6 +127,8 @@ extern "C" __declspec(dllexport) int ddsumTotal(double *inputArr, const int inpu
 
 extern "C" __declspec(dllexport) int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double **outputArr, __int32 *outputN);
 
+extern "C" __declspec(dllexport) int ddpartition(double *inputArr, __int32 *predicateArr, const int inputN, double **outputArrTrue, double **outputArrFalse, __int32 *outputNTrue, __int32 *outputNFalse);
+
 /* mutation */
 
 extern "C" __declspec(dllexport) int ddsetAll(double *arr, const int offset, const int n, const double value);

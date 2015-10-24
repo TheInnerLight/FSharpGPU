@@ -346,6 +346,12 @@ module private DeviceArrayOps =
         use result = mapN code [array.DeviceArray]
         new devicearray<'a>(GeneralDeviceKernels.filter result array.DeviceArray)
 
+    /// partitions the array using a stable filter
+    let partition (code : Expr<'a->devicebool>) (array : devicearray<'a>) =
+        use result = mapN code [array.DeviceArray]
+        let trues, falses = GeneralDeviceKernels.partition result array.DeviceArray
+        new devicearray<'a>(trues), new devicearray<'a>(falses)
+
     let evaluateMapsAndReconstructReduction (code : Expr<'a -> 'b -> 'a>) (array : devicearray<'b>) =
         match code with
         |ShapeLambda (var, expr) ->
@@ -443,6 +449,9 @@ type DeviceArray =
     /// of the elements.
     static member filter ([<ReflectedDefinition>] expr) =
         DeviceArrayOps.filter expr
+
+    static member partition ([<ReflectedDefinition>] expr) =
+        DeviceArrayOps.partition expr
 
     //
     // REDUCTIONS

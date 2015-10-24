@@ -132,6 +132,47 @@ type DeviceArrayUnitTests() =
         let cpuResult = array |> Array.filter (fun x -> (x ** 2.0 < 0.25) || ((x > 0.7) && (x < 0.8)))
         (cpuResult, cudaResult) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
     [<TestMethod>]
+    member x.PartitionTests () = 
+        let rnd = Random(System.DateTime.UtcNow.Millisecond)
+        let tolerance = 1e-9
+        // test1
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaTResult, cudaFResult = cudaArray |> DeviceArray.partition (fun x -> x .>. 0.9)
+        let cpuTResult, cpuFResult = array |> Array.partition (fun x -> x > 0.9)
+        let res1 = cudaTResult |> Array.ofDeviceArray
+        let res2 = cudaFResult |> Array.ofDeviceArray
+        (cpuTResult, cudaTResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuFResult, cudaFResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test2
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaTResult, cudaFResult = cudaArray |> DeviceArray.partition (fun x -> x .<. 0.5)
+        let cpuTResult, cpuFResult = array |> Array.partition (fun x -> x < 0.5)
+        (cpuTResult, cudaTResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuFResult, cudaFResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test3
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaTResult, cudaFResult = cudaArray |> DeviceArray.partition (fun x -> x ** 2.0 .<. 0.5)
+        let cpuTResult, cpuFResult = array |> Array.partition (fun x -> x ** 2.0 < 0.5)
+        (cpuTResult, cudaTResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuFResult, cudaFResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test4
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaTResult, cudaFResult = cudaArray |> DeviceArray.partition (fun x -> (x ** 2.0 .<. 0.25) .&&. (x .>. 0.1))
+        let cpuTResult, cpuFResult = array |> Array.partition (fun x -> (x ** 2.0 < 0.25) && (x > 0.1))
+        (cpuTResult, cudaTResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuFResult, cudaFResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        // test5
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cudaTResult, cudaFResult = cudaArray |> DeviceArray.partition (fun x -> (x ** 2.0 .<. 0.25) .||. ((x .>. 0.7) .&&. (x .<. 0.8)))
+        let cpuTResult, cpuFResult = array |> Array.partition (fun x -> (x ** 2.0 < 0.25) || ((x > 0.7) && (x < 0.8)))
+        (cpuTResult, cudaTResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+        (cpuFResult, cudaFResult |> Array.ofDeviceArray) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+    [<TestMethod>]
     member x.SummationTests () = 
         let rnd = Random()
         let tolerance = 1e-9

@@ -175,6 +175,9 @@ module internal DeviceFloatKernels =
     [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddfilter", CallingConvention = CallingConvention.Cdecl)>]
     extern int filter(IntPtr inArr, IntPtr predArr, int inputN, IntPtr& outArr, int& size)
 
+    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddpartition", CallingConvention = CallingConvention.Cdecl)>]
+    extern int partition(IntPtr inArr, IntPtr predArr, int inputN, IntPtr& outTrueArr, IntPtr& outFalseArr, int& trueSize, int& falseSize);
+
     // Float mutation
 
     [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddsetAll", CallingConvention = CallingConvention.Cdecl)>]
@@ -411,15 +414,28 @@ module internal GeneralDeviceKernels =
 
     // Filter
 
+    /// A function for filtering the device elements by an array of true/false values which determines whether the corresponding element should be included
     let filter (arrTrueFalse : ComputeArray) (arrToFltr : ComputeArray)  =
         let mutable cudaPtr = System.IntPtr.Zero
         let mutable length = 0
         match arrToFltr.ArrayType with
         |ComputeFloat ->
-            //DeviceInterop.createUninitialisedArray(arrToFltr.Length, ComputeDataInfo.length arrToFltr.ArrayType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
             DeviceFloatKernels.filter(arrToFltr.CudaPtr, arrTrueFalse.CudaPtr, arrToFltr.Length, &cudaPtr, &length) |> DeviceInterop.cudaCallWithExceptionCheck
         |_ -> raise <| System.NotSupportedException()
         new ComputeArray(arrToFltr.ArrayType, cudaPtr, length, FullArray, UserGenerated)
+
+    /// A function for partitioning the device elements by an array of true/false values which determines which array the corresponding element should be included in
+    let partition (arrTrueFalse : ComputeArray) (arrToFltr : ComputeArray)  =
+        let mutable trueCudaPtr = System.IntPtr.Zero
+        let mutable falseCudaPtr = System.IntPtr.Zero
+        let mutable trueLength = 0
+        let mutable falseLength = 0
+        match arrToFltr.ArrayType with
+        |ComputeFloat ->
+            DeviceFloatKernels.partition(arrToFltr.CudaPtr, arrTrueFalse.CudaPtr, arrToFltr.Length, &trueCudaPtr, &falseCudaPtr, &trueLength, &falseLength) |> DeviceInterop.cudaCallWithExceptionCheck
+        |_ -> raise <| System.NotSupportedException()
+        (new ComputeArray(arrToFltr.ArrayType, trueCudaPtr, trueLength, FullArray, UserGenerated),
+         new ComputeArray(arrToFltr.ArrayType, falseCudaPtr, falseLength, FullArray, UserGenerated))
 
     // Reduction
 
