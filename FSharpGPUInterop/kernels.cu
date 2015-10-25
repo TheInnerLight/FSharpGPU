@@ -100,36 +100,6 @@ __global__ void _kernel_ddfilter(double *inputArr, __int32 *predicateArr, const 
 }
 
 /* Kernel for filtering double array based a prefix counter */
-__global__ void _kernel_ddfilterPrefix(double *inputArr, __int32 *prefixArr, const ThreadBlocks inputN, double *outputArr)
-{
-	for (int iter = 0; iter < inputN.loopCount; ++iter) {
-		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
-		if (i > 0 && i < inputN.N && prefixArr[i] > 0)
-		{
-			if (prefixArr[i - 1] < prefixArr[i]) 
-			{
-				outputArr[(prefixArr[i]-1)] = inputArr[i - 1];
-			}
-		}
-	}
-}
-
-/* Kernel for filtering double array based a prefix counter */
-__global__ void _kernel_ddinvFilterPrefix(double *inputArr, __int32 *prefixArr, const ThreadBlocks inputN, double *outputArr)
-{
-	for (int iter = 0; iter < inputN.loopCount; ++iter) {
-		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
-		if (i > 0 && i < inputN.N)
-		{
-			if (prefixArr[i - 1] >= prefixArr[i])
-			{
-				outputArr[i - 1 - prefixArr[i]] = inputArr[i - 1];
-			}
-		}
-	}
-}
-
-/* Kernel for filtering double array based a prefix counter */
 __global__ void _kernel_iiInit(__int32 *prefixArr, const ThreadBlocks inputN, __int32 val)
 {
 	for (int iter = 0; iter < inputN.loopCount; ++iter) {
@@ -183,7 +153,7 @@ __device__ dbl_func log_kernel = _kernel_log<double, double>;
 __device__ dbl_func log10_kernel = _kernel_log10<double, double>;
 __device__ dbl_func exp_kernel = _kernel_exp<double, double>;
 
-
+// USE NOTES
 // _kernel_map_op is for applying functions to an array element
 // _kernel_map_with_const_op is for applying functions to an array element and a fixed value
 // _kernel_map_with_const_op2 is for non-commutative functions and has the opposite ordering to _kernel_map_with_const_op
@@ -705,7 +675,7 @@ int ddfilter(double *inputArr, __int32 *predicateArr, const int inputN, double *
 	// alloc array of correct size
 	createCUDADoubleArray(*outputN, outputArr);
 	// filter using prefix sum
-	_kernel_ddfilterPrefix << < tb.blockCount, tb.threadCount >> >(inputArr, prefixSum, tb, *outputArr);
+	_kernel_filter_by_prefix<double> <<< tb.blockCount, tb.threadCount >>> (inputArr, prefixSum, tb, *outputArr);
 	// cleanup
 	cudaFree(prefixSum);
 	return cudaGetLastError();
@@ -723,7 +693,6 @@ int ddpartition(double *inputArr, __int32 *predicateArr, const int inputN, doubl
 	ScanBlockAllocation sba = preallocBlockSums(nP1);
 	prescanArray(prefixSum, predicateArr, nP1, sba);
 	deallocBlockSums(sba);
-	
 	// copy length of arrays
 	cudaMemcpy(outputNTrue, prefixSum + (inputN), sizeof(int), cudaMemcpyDeviceToHost);
 	*outputNFalse = inputN - *outputNTrue;
@@ -731,9 +700,8 @@ int ddpartition(double *inputArr, __int32 *predicateArr, const int inputN, doubl
 	createCUDADoubleArray(*outputNTrue, outputArrTrue);
 	createCUDADoubleArray(*outputNFalse, outputArrFalse);
 	// filter using prefix sum
-	_kernel_ddfilterPrefix << < tb.blockCount, tb.threadCount >> >(inputArr, prefixSum, tb, *outputArrTrue);
-	_kernel_ddinvFilterPrefix << < tb.blockCount, tb.threadCount >> >(inputArr, prefixSum, tb, *outputArrFalse);
-
+	_kernel_filter_by_prefix<double> << < tb.blockCount, tb.threadCount >> > (inputArr, prefixSum, tb, *outputArrTrue);
+	_kernel_inv_filter_by_prefix<double> << < tb.blockCount, tb.threadCount >> > (inputArr, prefixSum, tb, *outputArrFalse);
 	// cleanup
 	cudaFree(prefixSum);
 	return cudaGetLastError();

@@ -98,6 +98,39 @@ template<typename T, typename U> __device__ U _kernel_log(T elem) { return log(e
 template<typename T, typename U> __device__ U _kernel_log10(T elem) { return log10(elem); }
 template<typename T, typename U> __device__ U _kernel_exp(T elem) { return exp(elem); }
 
+/* Templated Kernel for filtering double array based on a prefix counter */
+template<typename T>
+__global__ void _kernel_filter_by_prefix(T *inputArr, __int32 *prefixArr, const ThreadBlocks inputN, T *outputArr)
+{
+	for (int iter = 0; iter < inputN.loopCount; ++iter) {
+		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		if (i > 0 && i < inputN.N && prefixArr[i] > 0)
+		{
+			if (prefixArr[i - 1] < prefixArr[i])
+			{
+				outputArr[(prefixArr[i] - 1)] = inputArr[i - 1];
+			}
+		}
+	}
+}
+
+/* Templated Kernel for inverse filtering (i.e. all elements which returned false from filter predicate) double array based on a prefix counter */
+template<typename T>
+__global__ void _kernel_inv_filter_by_prefix(T *inputArr, __int32 *prefixArr, const ThreadBlocks inputN, T *outputArr)
+{
+	for (int iter = 0; iter < inputN.loopCount; ++iter) {
+		int i = iter*inputN.thrBlockCount + blockIdx.x * blockDim.x + threadIdx.x;
+		if (i > 0 && i < inputN.N)
+		{
+			if (prefixArr[i - 1] >= prefixArr[i])
+			{
+				outputArr[i - 1 - prefixArr[i]] = inputArr[i - 1];
+			}
+		}
+	}
+}
+
+/* Templated kernel for performing a map operation on a device array array of type T[], using a specified function, and returning something of type U[] */
 template<typename T, typename U>
 __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, U *outputArr, U p_function(T), OutOfBoundsBehaviour oobBehaviour)
 {
@@ -113,6 +146,7 @@ __global__ void _kernel_map_op(T *inputArr, const int inputOffset, const ThreadB
 	}
 }
 
+/* Templated kernel for performing a map operation on a device array array of type T[] and a constant of type T, using a specified function, and returning something of type U[] */
 template<typename T, typename U>
 __global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T), OutOfBoundsBehaviour oobBehaviour)
 {
@@ -128,6 +162,7 @@ __global__ void _kernel_map_with_const_op(T *inputArr, const int inputOffset, co
 	}
 }
 
+/* Templated kernel for performing a map operation on a constant of type T and a device array array of type T[], using a specified function, and returning something of type U[] */
 template<typename T, typename U>
 __global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, const ThreadBlocks inputN, const T d, U *outputArr, U p_function(T, T), OutOfBoundsBehaviour oobBehaviour)
 {
@@ -143,6 +178,7 @@ __global__ void _kernel_map_with_const_op2(T *inputArr, const int inputOffset, c
 	}
 }
 
+/* Templated kernel for performing a map operation on two device arrays of type T[], using a specified function, and returning something of type U[] */
 template<typename T, typename U>
 __global__ void _kernel_map2_op(T *input1Arr, const int input1Offset, T *input2Arr, const int input2Offset, const ThreadBlocks inputN, U *outputArr, U p_function(T, T), OutOfBoundsBehaviour oobBehaviour)
 {
