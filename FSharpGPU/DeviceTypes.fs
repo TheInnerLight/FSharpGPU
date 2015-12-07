@@ -62,7 +62,7 @@ type internal ComputeArray internal (arrayType : ComputeDataType, cudaPtr : Syst
         
 /// Result of breaking down an expression is either an array or just a primitive
 and internal ComputeResult =
-    |ResComputeTupleArray of ComputeResult list
+    |ResComputeTupleArray of ComputeArray list
     |ResComputeArray of ComputeArray
     |ResComputeFloat of float
     |ResComputeFloat32 of float32
@@ -88,7 +88,7 @@ module internal ComputeDataInfo =
         function
         |ComputeFloat -> sizeof<float>
         |ComputeFloat32 -> sizeof<float32>
-        |ComputeBool -> sizeof<float32>
+        |ComputeBool -> sizeof<int32>
 
 //
 // GPU Types
@@ -199,37 +199,44 @@ module GPUOperators =
 
 type internal DeviceArrayCombinations =
     |SingleItemArray of ComputeArray
-    |Tuple2Array of ComputeArray*ComputeArray
-    |Tuple3Array of ComputeArray*ComputeArray*ComputeArray
+    |TupleArray of ComputeArray list
+
+    static member assumeSingleton =
+        function
+        |SingleItemArray devArray -> devArray
+        |_ -> raise <| System.InvalidOperationException "Incorrect assumption of singleton"
+
+    static member assumeTuple =
+        function
+        |TupleArray arr -> arr
+        |_ -> raise <| System.InvalidOperationException "Incorrect assumption of double"
+
+    static member assumeDouble =
+        function
+        |TupleArray [devArray1; devArray2] -> devArray1, devArray2
+        |_ -> raise <| System.InvalidOperationException "Incorrect assumption of double"
 
 /// The type of immutable arrays of generic type which reside in device memory
 type devicearray<'a> internal (arrays) = 
-    member internal this.DeviceArrays = arrays
+    member internal this.DeviceArrays = 
+        match arrays with
+        |SingleItemArray a -> arrays
+        |TupleArray [] -> raise <| System.InvalidOperationException("Cannot device array of tuples from empty list")
+        |TupleArray (a::[]) -> SingleItemArray a
+        |_ -> arrays
     internal new (devArray : ComputeArray) = new devicearray<'a>(SingleItemArray devArray)
-    internal new (devArray1 : ComputeArray, devArray2 : ComputeArray) = new devicearray<'a>(Tuple2Array (devArray1, devArray2))
+    internal new (devArrays : ComputeArray list) = new devicearray<'a>(TupleArray devArrays)
         
     /// Frees the device memory associated with this object
     override this.Finalize() = 
         match arrays with
         |SingleItemArray devArray -> devArray.Dispose()
-        |Tuple2Array (devArray1, devArray2) ->
-            devArray1.Dispose()
-            devArray2.Dispose()
-        |Tuple3Array (devArray1, devArray2, devArray3) ->
-            devArray1.Dispose()
-            devArray2.Dispose()
-            devArray3.Dispose()
+        |TupleArray devArrays -> devArrays |> List.iter (fun it -> it.Dispose())
     interface System.IDisposable with
         member this.Dispose() = 
             match arrays with
             |SingleItemArray devArray -> devArray.Dispose()
-            |Tuple2Array (devArray1, devArray2) ->
-                devArray1.Dispose()
-                devArray2.Dispose()
-            |Tuple3Array (devArray1, devArray2, devArray3) ->
-                devArray1.Dispose()
-                devArray2.Dispose()
-                devArray3.Dispose()
+            |TupleArray devArrays -> devArrays |> List.iter (fun it -> it.Dispose())
 
 /// The type of immutable single element of generic type which reside in device memory
 type deviceelement<'a> internal (devArray : ComputeArray) = 

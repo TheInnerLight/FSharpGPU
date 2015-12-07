@@ -424,6 +424,10 @@ module internal GeneralDeviceKernels =
         |_ -> raise <| System.NotSupportedException()
         new ComputeArray(arrToFltr.ArrayType, cudaPtr, length, FullArray, UserGenerated)
 
+    
+    let filterList arrTrueFalse arrsToFltr  =
+        arrsToFltr |> List.map (filter arrTrueFalse)
+
     /// A function for partitioning the device elements by an array of true/false values which determines which array the corresponding element should be included in
     let partition (arrTrueFalse : ComputeArray) (arrToFltr : ComputeArray)  =
         let mutable trueCudaPtr = System.IntPtr.Zero
@@ -436,6 +440,9 @@ module internal GeneralDeviceKernels =
         |_ -> raise <| System.NotSupportedException()
         (new ComputeArray(arrToFltr.ArrayType, trueCudaPtr, trueLength, FullArray, UserGenerated),
          new ComputeArray(arrToFltr.ArrayType, falseCudaPtr, falseLength, FullArray, UserGenerated))
+
+    let partitionList arrTrueFalse arrsToFltr  =
+        arrsToFltr |> List.map (partition arrTrueFalse)
 
     // Reduction
 

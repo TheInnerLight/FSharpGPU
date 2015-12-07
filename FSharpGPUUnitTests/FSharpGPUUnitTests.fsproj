@@ -103,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeviceArrayTests.fs" />
+    <Compile Include="DeviceArrayTupleTests.fs" />
     <Compile Include="FloatOperatorTests.fs" />
     <Compile Include="FunctionTests.fs" />
     <None Include="App.config" />

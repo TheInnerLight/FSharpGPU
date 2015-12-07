@@ -1,5 +1,6 @@
 ﻿namespace NovelFS.FSharpGPU
 
+
 module internal ComputeArrays =
     /// Create an offset array from a supplied array and the specified offset
     let createArrayOffset offS newLength (array : ComputeArray) =
