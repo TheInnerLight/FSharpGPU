@@ -86,7 +86,8 @@ module private DeviceArrayInitialisation =
 module private DeviceArrayOps =
     /// Returns the length of the device array
     let length (array : devicearray<'a>) =
-        array.DeviceArray.Length
+        match array.DeviceArrays with
+        |SingleItemArray devArray -> devArray.Length
 
     let zeroCreate<'a when 'a :> IGPUType> (length : int) =
         match typeof<'a> with
@@ -148,6 +149,15 @@ module private DeviceArrayOps =
             ResComputeBool b
         |Var(var) ->
             mapArgs.[var]
+        |Let(var, letBoundExpr, body) ->
+            let newMapArgs = mapArgs |> Map.add var (decomposeMap letBoundExpr mapArgs)
+            decomposeMap body newMapArgs
+        |TupleGet (expr, i) ->
+            decomposeMap expr mapArgs
+        |NewTuple (exprList) ->
+            exprList 
+            |> List.map (fun cd -> decomposeMap cd mapArgs) 
+            |> ResComputeTupleArray
         // IDENTITY
         |SpecificCall <@ id @> (_, _, [expr]) ->
             decomposeMap expr mapArgs
@@ -280,17 +290,27 @@ module private DeviceArrayOps =
 
     /// builds a new array whose elements are the results of applying the given function to each element of the array.
     let map (code : Expr<'a->'b>) (array : devicearray<'a>) =
-        let result = mapN code [array.DeviceArray]
-        new devicearray<'b>(result)
+        match array.DeviceArrays with
+        |SingleItemArray devArray ->
+            let result = mapN code [devArray]
+            new devicearray<'b>(result)
+        |Tuple2Array (devArray1, devArray2) ->
+            let result = mapN code [devArray1; devArray2]
+            new devicearray<'b>(result)
 
     /// builds a new array whose elements are the results of applying the given function to each element of the array.
     let map2 (code : Expr<'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) =
-        let result = mapN code [array1.DeviceArray; array2.DeviceArray]
-        new devicearray<'b>(result)
+        match array1.DeviceArrays, array2.DeviceArrays with
+        |SingleItemArray devArray1, SingleItemArray devArray2 ->
+            let result = mapN code [devArray1; devArray2]
+            new devicearray<'b>(result)
 
     /// Map involving 3 arrays
     let map3 (code : Expr<'a->'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) (array3 : devicearray<'a>) =
-        mapN code [array1.DeviceArray; array2.DeviceArray; array3.DeviceArray]
+        match array1.DeviceArrays, array2.DeviceArrays, array3.DeviceArrays with
+        |SingleItemArray devArray1, SingleItemArray devArray2, SingleItemArray devArray3 ->
+            let result = mapN code [devArray1; devArray2; devArray3]
+            new devicearray<'b>(result)
 
     /// builds a new array whose elements are the results of applying the given function to each element of the array and a specified number of its neighbours
     let mapNeighbours (neighbourSpec : NeighbourMapping<'a,'b>) mapLengthSpec (inArray : devicearray<'a>) =
@@ -301,7 +321,9 @@ module private DeviceArrayOps =
                 preserveCase
             |Shrink ->
                 shrinkCase
-        let array1 = inArray.DeviceArray
+        let array1 = 
+            match inArray.DeviceArrays with
+            |SingleItemArray devArray1 -> devArray1
         let result = // neighbour mapping logic: we create various copies of the array with offsets and length changes applied so that we can use map2, map3, etc. between them
             match neighbourSpec with
             |NeighbourMapping.ImmediateLeft code -> // neighbour mapping of X_i and X_(i-1)
@@ -343,16 +365,23 @@ module private DeviceArrayOps =
 
     /// filters the array using a stable filter
     let filter (code : Expr<'a->devicebool>) (array : devicearray<'a>) =
-        use result = mapN code [array.DeviceArray]
-        new devicearray<'a>(GeneralDeviceKernels.filter result array.DeviceArray)
+        match array.DeviceArrays with
+        |SingleItemArray devArray ->
+            use result = mapN code [devArray]
+            new devicearray<'a>(GeneralDeviceKernels.filter result devArray)
 
     /// partitions the array using a stable filter
     let partition (code : Expr<'a->devicebool>) (array : devicearray<'a>) =
-        use result = mapN code [array.DeviceArray]
-        let trues, falses = GeneralDeviceKernels.partition result array.DeviceArray
-        new devicearray<'a>(trues), new devicearray<'a>(falses)
+        match array.DeviceArrays with
+        |SingleItemArray devArray ->
+            use result = mapN code [devArray]
+            let trues, falses = GeneralDeviceKernels.partition result devArray
+            new devicearray<'a>(trues), new devicearray<'a>(falses)
 
     let evaluateMapsAndReconstructReduction (code : Expr<'a -> 'b -> 'a>) (array : devicearray<'b>) =
+        let devArray = 
+            match array.DeviceArrays with
+            |SingleItemArray devArray -> devArray
         match code with
         |ShapeLambda (var, expr) ->
             let foldResults = seperateReductionVariable var expr array
@@ -360,7 +389,7 @@ module private DeviceArrayOps =
             |ReduceExpr (foldExpr, mapExrList, varList) ->
                 let mapResults = mapExrList |> List.map (fun mapExpr -> 
                     let funWithLambda = reApplyLambdas expr [] mapExpr
-                    mapN funWithLambda [array.DeviceArray])
+                    mapN funWithLambda [devArray])
 
                 let acc = Expr.Lambda(varList |> List.head, foldExpr)
                 let mapLambdas = (acc, varList |> List.tail) ||> List.fold (fun acc v -> Expr.Lambda(v, acc))
@@ -397,6 +426,11 @@ module private DeviceArrayOps =
             devArray |> deviceelement< 'b>
         |_ ->
             raise <| System.InvalidOperationException("Reduction operation ended in an invalid state.")
+
+    /// builds a new array whose elements are the results of applying the given function to each element of the array.
+    let zip (array1 : devicearray<'a>) (array2 : devicearray<'b>) =
+        match array1.DeviceArrays, array2.DeviceArrays with
+        |SingleItemArray devArray1, SingleItemArray devArray2 -> new devicearray<'a*'b>(devArray1, devArray2)
 
 /// A set of stencil templates for defining maps over several nearby array elements
 type Stencils =
@@ -468,7 +502,10 @@ type DeviceArray =
 
     /// Returns the sum of the results generated by applying the function to each element of the device array.
     static member inline sumBy ([<ReflectedDefinition>] expr) =
-         DeviceArray.associativeReduce (+) << DeviceArray.mapQuote expr
+        DeviceArray.associativeReduce (+) << DeviceArray.mapQuote expr
+
+     static member zip array1 = DeviceArrayOps.zip array1
+        
 
 
 type DeviceElement =

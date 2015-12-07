@@ -99,7 +99,6 @@ __global__ void _kernel_ddfilter(double *inputArr, __int32 *predicateArr, const 
 	}
 }
 
-/* Kernel for filtering double array based a prefix counter */
 __global__ void _kernel_iiInit(__int32 *prefixArr, const ThreadBlocks inputN, __int32 val)
 {
 	for (int iter = 0; iter < inputN.loopCount; ++iter) {

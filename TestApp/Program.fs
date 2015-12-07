@@ -58,7 +58,7 @@ let createTimerData() =
             use devArray = DeviceArray.ofArray array
             let cpuTime = repeatAndTime 5 (fun x -> array |> Array.map (fun x -> sin x) |> ignore)
             let gpuTime = repeatAndTime 5 (fun x -> 
-                use a = devArray |> DeviceArray.map (fun x -> sin x) 
+                use a = devArray |> DeviceArray.map (sin) 
                 a |> ignore)
             printfn "%d, %d, %d" i cpuTime gpuTime)
 

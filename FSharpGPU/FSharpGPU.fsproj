@@ -99,6 +99,7 @@
     <Compile Include="DeviceHostTransfer.fs" />
     <Compile Include="ComputeArrays.fs" />
     <Compile Include="DeviceInterop.fs" />
+    <Compile Include="CommonExpressions.fs" />
     <Compile Include="DeviceArray.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />

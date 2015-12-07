@@ -62,6 +62,7 @@ type internal ComputeArray internal (arrayType : ComputeDataType, cudaPtr : Syst
         
 /// Result of breaking down an expression is either an array or just a primitive
 and internal ComputeResult =
+    |ResComputeTupleArray of ComputeResult list
     |ResComputeArray of ComputeArray
     |ResComputeFloat of float
     |ResComputeFloat32 of float32
@@ -196,16 +197,42 @@ module GPUOperators =
     /// device capable conditional OR operator
     let ( .||. ) (val1 : devicebool) (val2 : devicebool) : devicebool  = DeviceError.raiseNotSupportedOperation()
 
+type internal DeviceArrayCombinations =
+    |SingleItemArray of ComputeArray
+    |Tuple2Array of ComputeArray*ComputeArray
+    |Tuple3Array of ComputeArray*ComputeArray*ComputeArray
+
 /// The type of immutable arrays of generic type which reside in device memory
-type devicearray<'a when 'a :> IGPUType> internal (devArray : ComputeArray) = 
-    member internal this.DeviceArray = devArray
+type devicearray<'a> internal (arrays) = 
+    member internal this.DeviceArrays = arrays
+    internal new (devArray : ComputeArray) = new devicearray<'a>(SingleItemArray devArray)
+    internal new (devArray1 : ComputeArray, devArray2 : ComputeArray) = new devicearray<'a>(Tuple2Array (devArray1, devArray2))
+        
     /// Frees the device memory associated with this object
-    override this.Finalize() = devArray.Dispose()
+    override this.Finalize() = 
+        match arrays with
+        |SingleItemArray devArray -> devArray.Dispose()
+        |Tuple2Array (devArray1, devArray2) ->
+            devArray1.Dispose()
+            devArray2.Dispose()
+        |Tuple3Array (devArray1, devArray2, devArray3) ->
+            devArray1.Dispose()
+            devArray2.Dispose()
+            devArray3.Dispose()
     interface System.IDisposable with
-        member this.Dispose() = devArray.Dispose()
+        member this.Dispose() = 
+            match arrays with
+            |SingleItemArray devArray -> devArray.Dispose()
+            |Tuple2Array (devArray1, devArray2) ->
+                devArray1.Dispose()
+                devArray2.Dispose()
+            |Tuple3Array (devArray1, devArray2, devArray3) ->
+                devArray1.Dispose()
+                devArray2.Dispose()
+                devArray3.Dispose()
 
 /// The type of immutable single element of generic type which reside in device memory
-type deviceelement<'a when 'a :> IGPUType> internal (devArray : ComputeArray) = 
+type deviceelement<'a> internal (devArray : ComputeArray) = 
     do match devArray.Length with
         |1 -> ()
         |_ -> raise <| System.InvalidOperationException("deviceelement must have one element")
