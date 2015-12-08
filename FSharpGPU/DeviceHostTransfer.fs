@@ -16,9 +16,7 @@ module DeviceHostTransfer =
             new devicearray<devicefloat>(new ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, Array.length arr, FullArray, UserGenerated))
         /// transfer device float array to host
         static member (<&!!!!) (DeviceArrayCreator, array : devicearray<devicefloat>) =
-            let devArray =
-                match array.DeviceArrays with
-                |SingleItemArray devArray -> devArray
+            let devArray = ComputeResult.assumeSingleton (array.DeviceArrays)
             match devArray.ArrayType with
             |ComputeDataType.ComputeFloat ->
                 let hostArray = Array.zeroCreate<float> (devArray.Length)
@@ -27,9 +25,7 @@ module DeviceHostTransfer =
             |_ -> failwith "Invalid type"
         /// transfer device bool array to host
         static member (<&!!!!) (DeviceArrayCreator, array : devicearray<devicebool>) =
-            let devArray =
-                match array.DeviceArrays with
-                |SingleItemArray devArray -> devArray
+            let devArray = ComputeResult.assumeSingleton (array.DeviceArrays)
             match devArray.ArrayType with
             |ComputeDataType.ComputeBool ->
                 let hostArray = Array.zeroCreate<int> (devArray.Length)

@@ -60,53 +60,41 @@ type private SepFoldExpr =
     |MapExpr of System.Guid * Expr 
     |ReduceExpr of Expr  * Expr list * Var list
 
-module private DeviceArrayInitialisation =
-    /// create and fill a device array of all floats with a specific value
-    let fillFloat length value =
-        let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        DeviceFloatKernels.setAllElementsToConstant(cudaPtr, 0, length, value) |> DeviceInterop.cudaCallWithExceptionCheck
-        new ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, length, FullArray, UserGenerated)
-    /// create and fill a device array of all floats with a specific value
-    let fillBool length value =
-        let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedCUDABoolArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        //DeviceBoolKernels.setAllElementsToConstant(cudaPtr, 0, length, 0.0) |> DeviceInterop.cudaCallWithExceptionCheck
-        new ComputeArray(ComputeDataType.ComputeBool, cudaPtr, length, FullArray, UserGenerated)
-    /// create and fill a device array of all floats with a specific value
-    let computeArrayOfSameType length (array : ComputeArray) =
-        let mutable cudaPtr = System.IntPtr(0)
-        match array.ArrayType with
-        |ComputeFloat -> DeviceInterop.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        |ComputeBool -> DeviceInterop.createUninitialisedCUDABoolArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        |_ -> failwith "Unsupported type"
-        new ComputeArray(array.ArrayType, cudaPtr, length, FullArray, UserGenerated)
-
 /// Basic operation implementation on Device Arrays
 module private DeviceArrayOps =
     /// Returns the length of the device array
-    let length (array : devicearray<'a>) =
-        match array.DeviceArrays with
-        |SingleItemArray devArray -> devArray.Length
+    let length (array : devicearray<'a>) = ComputeResults.length (array.DeviceArrays)
 
-    let zeroCreate<'a when 'a :> IGPUType> (length : int) =
+    /// Create an array of default values of the specified length
+    let defaultCreate<'a when 'a :> IGPUType> (length : int) =
         match typeof<'a> with
         |x when x = typeof<devicefloat> ->
-            new devicearray<'a>(DeviceArrayInitialisation.fillFloat length 0.0)
+            new devicearray<'a>(ComputeArrays.fillFloat length 0.0)
         |x when x = typeof<devicebool> ->
-            new devicearray<'a>(DeviceArrayInitialisation.fillBool length false)
+            new devicearray<'a>(ComputeArrays.fillBool length false)
         |_ ->
             failwith "No other types currently supported"
 
     /// Combines the two arrays into an array of tuples with two elements.
     let zip (array1 : devicearray<'a>) (array2 : devicearray<'b>) =
         match array1.DeviceArrays, array2.DeviceArrays with
-        |SingleItemArray devArray1, SingleItemArray devArray2 -> new devicearray<'a*'b>([devArray1; devArray2])
+        |ResComputeArray devArray1, ResComputeArray devArray2 -> new devicearray<'a*'b>([devArray1; devArray2])
+
+    /// Combines the three arrays into an array of tuples with three elements.
+    let zip3 (array1 : devicearray<'a>) (array2 : devicearray<'b>) (array3 : devicearray<'c>) =
+        match array1.DeviceArrays, array2.DeviceArrays, array3.DeviceArrays with
+        |ResComputeArray devArray1, ResComputeArray devArray2, ResComputeArray devArray3 -> 
+            new devicearray<'a*'b*'c>([devArray1; devArray2; devArray3])
 
     /// Splits an array of pairs into two arrays.
     let unzip<'a,'b> (array : devicearray<'a*'b>) =
-        let (dev1, dev2) = DeviceArrayCombinations.assumeDouble (array.DeviceArrays)
+        let (dev1, dev2) = ComputeResult.assumePair (array.DeviceArrays)
         new devicearray<'a>(dev1), new devicearray<'b>(dev2)
+
+    /// Splits an array of triples into three arrays.
+    let unzip3<'a,'b,'c> (array : devicearray<'a*'b*'c>) =
+        let (dev1, dev2, dev3) = ComputeResult.assumeTriple (array.DeviceArrays)
+        new devicearray<'a>(dev1), new devicearray<'b>(dev2), new devicearray<'b>(dev3)
 
     /// Re-applys the lambdas from the start of a reduction expression to the map expressions
     let rec reApplyLambdas originalExpr varList newExpr =
@@ -133,19 +121,18 @@ module private DeviceArrayOps =
             |true -> MapExpr (genGuid(), code)
             |false ->
                 let exprAcc =
-                    ([], subResults) ||> List.fold (fun acc subRes ->
+                    ([], subResults) 
+                    ||> List.fold (fun acc subRes ->
                             match subRes with
                             |MapExpr (guid, mapCode) -> 
                                 let var = Var(sprintf "`%A`" guid, mapCode.Type)
                                 (Expr.Var var, [mapCode], [var]) :: acc
                             |ReduceExpr (foldCode, subCodes, varList) ->
                                 (foldCode, subCodes, varList) :: acc)
-
                 let exprList = exprAcc |> List.collect (fun (_, b, _) -> b)
                 let guidList = exprAcc |> List.collect (fun (_, _, c) -> c)
                 let combinedExpr = RebuildShapeCombination(shapeComboObject, exprAcc|> List.rev |> List.map (fun (a, _, _) -> a))
                 ReduceExpr(combinedExpr, exprList, guidList)
-                
         | ShapeLambda (var, expr) -> seperateReductionVariable foldVar expr array
 
 
@@ -160,7 +147,8 @@ module private DeviceArrayOps =
         |Var(var) ->
             variableTable.[var]
         |Let(var, letBoundExpr, body) ->
-            let newMapArgs = variableTable |> Map.add var (decomposeMap letBoundExpr variableTable)
+            use result = decomposeMap letBoundExpr variableTable
+            let newMapArgs = variableTable |> Map.add var (result)
             decomposeMap body newMapArgs
         |TupleGet (expr, i) ->
             match decomposeMap expr variableTable with
@@ -168,13 +156,16 @@ module private DeviceArrayOps =
             |_ -> raise <| System.InvalidOperationException()
         |NewTuple (exprList) ->
             exprList 
-            |> List.map (fun cd -> 
-                match decomposeMap cd variableTable with
-                |ResComputeArray array -> array) 
+            |> List.map (fun cd -> ComputeResult.assumeSingleton <| decomposeMap cd variableTable)
             |> ResComputeTupleArray
         // IDENTITY
         |SpecificCall <@ id @> (_, _, [expr]) ->
             decomposeMap expr variableTable
+        // TYPE COERSION
+        |SpecificCall <@ devicefloat @> (_, _, [expr]) ->
+            ResComputeFloat (ComputeResult.assumeFloat <| decomposeMap expr variableTable)
+        |SpecificCall <@ devicebool @> (_, _, [expr]) ->
+            ResComputeBool (ComputeResult.assumeBool <| decomposeMap expr variableTable)
         // SIMPLE OPERATORS
         |SpecificCall <@ (+) @> (_, _, [lhsExpr; rhsExpr]) -> // (+) Operator
             use lhs = decomposeMap lhsExpr variableTable
@@ -295,35 +286,24 @@ module private DeviceArrayOps =
                 |_ -> raise <| System.InvalidOperationException("Mismatch between the number of device lambda arguments and the number of device arrays")
             |_ ->
                 decomposeMap code mapping
-        let result = mapAnyN code Map.empty arrayList
-        match result with
-            |ResComputeArray devArray -> SingleItemArray devArray
-            |ResComputeTupleArray devArrays -> TupleArray devArrays
-            |_ -> failwith "Return type was not a device array"
+        let length = ComputeResults.length <| List.head arrayList
+        ComputeResults.expandValueToArray length (mapAnyN code Map.empty arrayList)
 
     /// builds a new array whose elements are the results of applying the given function to each element of the array.
     let map (code : Expr<'a->'b>) (array : devicearray<'a>) =
-        match array.DeviceArrays with
-        |SingleItemArray devArray ->
-            let result = mapN code [ResComputeArray devArray]
-            new devicearray<'b>(result)
-        |TupleArray devArrays ->
-            let result = mapN code [(ResComputeTupleArray devArrays)]
-            new devicearray<'b>(result)
+        let result = mapN code [array.DeviceArrays]
+        new devicearray<'b>(result)
 
     /// builds a new array whose elements are the results of applying the given function to each element of the array.
     let map2 (code : Expr<'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) =
-        match array1.DeviceArrays, array2.DeviceArrays with
-        |SingleItemArray devArray1, SingleItemArray devArray2 ->
-            let result = mapN code [ResComputeArray devArray1; ResComputeArray devArray2]
-            new devicearray<'b>(result)
+        let result = mapN code [array1.DeviceArrays; array2.DeviceArrays]
+        new devicearray<'b>(result)
+
 
     /// Map involving 3 arrays
     let map3 (code : Expr<'a->'a->'a->'b>) (array1 : devicearray<'a>) (array2 : devicearray<'a>) (array3 : devicearray<'a>) =
-        match array1.DeviceArrays, array2.DeviceArrays, array3.DeviceArrays with
-        |SingleItemArray devArray1, SingleItemArray devArray2, SingleItemArray devArray3 ->
-            let result = mapN code [ResComputeArray devArray1; ResComputeArray devArray2; ResComputeArray devArray3]
-            new devicearray<'b>(result)
+        let result = mapN code [array1.DeviceArrays; array2.DeviceArrays; array3.DeviceArrays]
+        new devicearray<'b>(result)
 
     /// builds a new array whose elements are the results of applying the given function to each element of the array and a specified number of its neighbours
     let mapNeighbours (neighbourSpec : NeighbourMapping<'a,'b>) mapLengthSpec (inArray : devicearray<'a>) =
@@ -334,34 +314,32 @@ module private DeviceArrayOps =
                 preserveCase
             |Shrink ->
                 shrinkCase
-        let array1 = 
-            match inArray.DeviceArrays with
-            |SingleItemArray devArray1 -> devArray1
+        let array1 = ComputeResult.assumeSingleton <| inArray.DeviceArrays
         let result = // neighbour mapping logic: we create various copies of the array with offsets and length changes applied so that we can use map2, map3, etc. between them
             match neighbourSpec with
             |NeighbourMapping.ImmediateLeft code -> // neighbour mapping of X_i and X_(i-1)
                 let array2 = ComputeArrays.createArrayOffset -1 None array1
-                let result = DeviceArrayCombinations.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2]
+                let result = ComputeResult.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2]
                 createArrayOrOffsetFromSpec mapLengthSpec 
                     (ComputeArrays.createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
                     (ComputeArrays.createArrayOffset 1 (Some <| array1.Length-1) result) // shrinking case : 1 element shorter with 1 positive offset
             |NeighbourMapping.ImmediateRight code -> // neighbour mapping of X_i and X_(i+1)
                 let array2 = ComputeArrays.createArrayOffset 1 None array1
-                let result = DeviceArrayCombinations.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2]
+                let result = ComputeResult.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2]
                 createArrayOrOffsetFromSpec mapLengthSpec 
                     (ComputeArrays.createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
                     (ComputeArrays.createArrayOffset 0 (Some <| array1.Length-1) result) // shrinking case : 1 element shorter with 0 offset
             |NeighbourMapping.Stencil2 code -> // neighbour mapping of X_(i-1) and X_(i+1)
                 let array2 = ComputeArrays.createArrayOffset -1 None array1
                 let array3 = ComputeArrays.createArrayOffset 1 None array1
-                let result = DeviceArrayCombinations.assumeSingleton <| mapN code [ResComputeArray array2; ResComputeArray array3]
+                let result = ComputeResult.assumeSingleton <| mapN code [ResComputeArray array2; ResComputeArray array3]
                 createArrayOrOffsetFromSpec mapLengthSpec 
                     (ComputeArrays.createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
                     (ComputeArrays.createArrayOffset 1 (Some <| array1.Length-2) result) // shrinking case : 2 elements shorter with 1 positive offset
             |NeighbourMapping.Stencil3 code -> // neighbour mapping of X_i, X_(i-1) and X_(i+1)
                 let array2 = ComputeArrays.createArrayOffset -1 None array1
                 let array3 = ComputeArrays.createArrayOffset 1 None array1
-                let result = DeviceArrayCombinations.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2; ResComputeArray array3]
+                let result = ComputeResult.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2; ResComputeArray array3]
                 createArrayOrOffsetFromSpec mapLengthSpec 
                     (ComputeArrays.createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
                     (ComputeArrays.createArrayOffset 1 (Some <| array1.Length-2) result) // shrinking case : 2 elements shorter with 1 positive offset
@@ -370,7 +348,7 @@ module private DeviceArrayOps =
                 let array3 = ComputeArrays.createArrayOffset -1 None array1
                 let array4 = ComputeArrays.createArrayOffset 1 None array1
                 let array5 = ComputeArrays.createArrayOffset 2 None array1
-                let result = DeviceArrayCombinations.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2; ResComputeArray array3; ResComputeArray array4; ResComputeArray array5]
+                let result = ComputeResult.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2; ResComputeArray array3; ResComputeArray array4; ResComputeArray array5]
                 createArrayOrOffsetFromSpec mapLengthSpec 
                     (ComputeArrays.createArrayOffset 0 (Some <| array1.Length) result) // length preserving case
                     (ComputeArrays.createArrayOffset 2 (Some <| array1.Length-4) result) // shrinking case : 4 elements shorter with 2 positive offset
@@ -378,34 +356,36 @@ module private DeviceArrayOps =
 
     let private filterOrPartition (code : Expr<'a->devicebool>) (array : devicearray<'a>) singleFunc tupleFunc =
         // can safely assume singleton list results because filter returns bool
-        let performFilterMap lst = DeviceArrayCombinations.assumeSingleton <| mapN code lst
+        let performFilterMap lst = ComputeResult.assumeSingleton <| mapN code lst
         // original array may have been tuple so handle singletons and tuples
         match array.DeviceArrays with
-        |SingleItemArray devArray -> 
-            let result = performFilterMap [ResComputeArray devArray]
+        |ResComputeArray devArray -> 
+            use result = performFilterMap [array.DeviceArrays]
             singleFunc devArray result
-        |TupleArray devArrays -> 
-            let result = performFilterMap [ResComputeTupleArray devArrays]
+        |ResComputeTupleArray devArrays -> 
+            use result = performFilterMap [ResComputeTupleArray devArrays]
             tupleFunc devArrays result
 
     /// filters the array using a stable filter
     let filter (code) (array : devicearray<'a>) =
         filterOrPartition code array 
-            (fun devArray result -> new devicearray<'a>(GeneralDeviceKernels.filter result devArray))
-            (fun devArrays result -> new devicearray<'a>(GeneralDeviceKernels.filterList result devArrays))
+            (fun devArray result -> // single array case uses base filter function
+                new devicearray<'a>(GeneralDeviceKernels.filter result devArray))
+            (fun devArrays result -> // tuple case uses filterList function
+                new devicearray<'a>(GeneralDeviceKernels.filterList result devArrays))
 
     /// partitions the array using a stable filter
     let partition (code) (array : devicearray<'a>) =
         filterOrPartition code array 
-            (fun devArray result -> 
+            (fun devArray result -> // single array case uses base partition function
                 let trues, falses = GeneralDeviceKernels.partition result devArray
                 new devicearray<'a>(trues), new devicearray<'a>(falses))
-            (fun devArrays result -> 
+            (fun devArrays result -> // tuple case uses partitionList function
                 let trues, falses = GeneralDeviceKernels.partitionList result devArrays |> List.unzip
                 new devicearray<'a>(trues), new devicearray<'a>(falses))
 
     let evaluateMapsAndReconstructReduction (code : Expr<'a -> 'b -> 'a>) (array : devicearray<'b>) =
-        let devArray = DeviceArrayCombinations.assumeSingleton array.DeviceArrays
+        let devArray = ComputeResult.assumeSingleton array.DeviceArrays
         match code with
         |ShapeLambda (var, expr) ->
             let foldResults = seperateReductionVariable var expr array
@@ -427,7 +407,7 @@ module private DeviceArrayOps =
     let assocReduce<'a, 'b when 'b :> IGPUType and 'a :> IGPUType> (code : Expr< 'b -> 'a -> 'b>) array =
         /// Apply reduction to element 1 and element 2 and reduce the result to an array of half size
         let offsetMap (code : Expr< 'b -> 'a -> 'b>) (array1 : ComputeArray) (array2 : ComputeArray) =
-            using (DeviceArrayCombinations.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2]) 
+            using (ComputeResult.assumeSingleton <| mapN code [ResComputeArray array1; ResComputeArray array2]) 
                 (fun result -> GeneralDeviceKernels.reduceToEvenIndices result)
         /// Recursively apply the reduction to element X_i and X_i+1 and merge the results until only one element remains
         let rec assocReduceIntrnl (code : Expr< 'b -> 'a -> 'b>) (array : ComputeArray) =
@@ -447,8 +427,9 @@ module private DeviceArrayOps =
         match mapResults with
         |[devArray] ->
             let foldExpr = Expr< 'b -> 'a -> 'b>.Cast foldExpr
-            let devArray = assocReduceIntrnl (foldExpr) (DeviceArrayCombinations.assumeSingleton devArray)
-            devArray |> deviceelement< 'b>
+            let nDevArray = assocReduceIntrnl (foldExpr) (ComputeResult.assumeSingleton devArray)
+            devArray.Dispose()
+            nDevArray |> deviceelement<'b>
         |_ ->
             raise <| System.InvalidOperationException("Reduction operation ended in an invalid state.")
 
@@ -482,9 +463,10 @@ type DeviceArray =
     // -------
     static member inline ofArray array = 
         DeviceHostTransfer.copyArrayToDevice array
-    //
+    // ----
     // MAPS
     // ----
+
     /// Builds a new array whose elements are the results of applying the given function to each element of the array.
     static member mapQuote (expr) =
         DeviceArrayOps.map expr
@@ -498,9 +480,9 @@ type DeviceArray =
     static member mapNeighbours neighbourSpec mapLengthSpec array =
         DeviceArrayOps.mapNeighbours neighbourSpec mapLengthSpec array
 
-    //
+    // -------
     // FILTERS
-    // ----
+    // -------
 
     /// Returns a new array containing only the elements of the array for which the given predicate returns true.  This operation performs a stable filter, i.e. does not change the order
     /// of the elements.
@@ -510,7 +492,7 @@ type DeviceArray =
     static member partition ([<ReflectedDefinition>] expr) =
         DeviceArrayOps.partition expr
 
-    //
+    // ----------
     // REDUCTIONS
     // ----------
 
@@ -527,13 +509,21 @@ type DeviceArray =
     static member inline sumBy ([<ReflectedDefinition>] expr) =
         DeviceArray.associativeReduce (+) << DeviceArray.mapQuote expr
 
+    // ---------
+    // ZIP/UNZIP
+    // ---------
+
     /// Combines the two arrays into an array of tuples with two elements.
     static member zip array1 = DeviceArrayOps.zip array1
+
+    /// Combines the three arrays into an array of tuples with three elements.
+    static member zip3 array1 = DeviceArrayOps.zip3 array1
 
     /// Splits an array of pairs into two arrays.
     static member unzip array = DeviceArrayOps.unzip array
 
-        
+    /// Splits an array of triples into three arrays.
+    static member unzip3 array = DeviceArrayOps.unzip3 array    
 
 
 type DeviceElement =

@@ -26,7 +26,7 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 type DeviceArrayUnitTests() = 
     /// Unit tests for DeviceArray.map
     [<TestMethod>]
-    member x.MapTests () = 
+    member x.``Map single array`` () = 
         let rnd = Random()
         let tolerance = 1e-9
         // test 1
@@ -58,6 +58,17 @@ type DeviceArrayUnitTests() =
         let cudaArray = DeviceArray.ofArray array
         let cpuResult1 = array |> Array.map (fun x -> x ** 5.731 *  x + 63784.0 - 938724.4)
         let cudaResult1 = cudaArray |> DeviceArray.map ( fun x -> x ** 5.731 *  x + 63784.0 - 938724.4 ) |> Array.ofDeviceArray
+        (cpuResult1, cudaResult1) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
+
+    [<TestMethod>]
+    member x.``Map to constant array`` () = 
+        let rnd = Random()
+        let tolerance = 1e-9
+        // test 1
+        let array = Array.init (10000) (fun i -> rnd.NextDouble())
+        let cudaArray = DeviceArray.ofArray array
+        let cpuResult1 = array |> Array.map (fun x -> 1.0)
+        let cudaResult1 = cudaArray |> DeviceArray.map ( fun x -> devicefloat 1.0 ) |> Array.ofDeviceArray
         (cpuResult1, cudaResult1) ||> Array.iter2 (fun a1 a2 -> Assert.AreEqual(a1, a2, tolerance))
 
     [<TestMethod>]
