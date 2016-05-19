@@ -1,21 +1,43 @@
-﻿namespace NovelFS.FSharpGPU
+﻿(*This file is part of FSharpGPU.
 
+FSharpGPU is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
+FSharpGPU is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with FSharpGPU.  If not, see <http://www.gnu.org/licenses/>.
+*)
+
+(* Copyright © 2015 Philip Curzon *)
+
+namespace NovelFS.FSharpGPU
+
+/// Functions for transfering arrays and elements between host and device
 module DeviceHostTransfer =
+    /// A helper type to support conversion between host and device elements
     type DeviceArrayCreator = 
         |DeviceArrayCreator
+
         /// transfer float array to device
-        static member (&!!!!>) (DeviceArrayCreator, arr : float[]) =
+        static member HostArrayToGpuArray (DeviceArrayCreator, arr : float[]) =
             let mutable cudaPtr = System.IntPtr(0)
             DeviceInterop.initialiseCUDADoubleArray(arr, Array.length arr, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
             new devicearray<devicefloat>(new ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, Array.length arr, FullArray, UserGenerated))
+
         /// transfer bool array to device
-        static member (&!!!!>) (DeviceArrayCreator, arr : bool[]) =
+        static member HostArrayToGpuArray (DeviceArrayCreator, arr : bool[]) =
             let mutable cudaPtr = System.IntPtr(0)
             DeviceInterop.initialiseCUDABoolArray(arr, Array.length arr, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
             new devicearray<devicefloat>(new ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, Array.length arr, FullArray, UserGenerated))
+
         /// transfer device float array to host
-        static member (<&!!!!) (DeviceArrayCreator, array : devicearray<devicefloat>) =
+        static member GpuArrayToHostArray (DeviceArrayCreator, array : devicearray<devicefloat>) =
             let devArray = ComputeResult.assumeSingleton (array.DeviceArrays)
             match devArray.ArrayType with
             |ComputeDataType.ComputeFloat ->
@@ -23,8 +45,9 @@ module DeviceHostTransfer =
                 DeviceInterop.retrieveCUDADoubleArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
                 hostArray
             |_ -> failwith "Invalid type"
+
         /// transfer device bool array to host
-        static member (<&!!!!) (DeviceArrayCreator, array : devicearray<devicebool>) =
+        static member GpuArrayToHostArray (DeviceArrayCreator, array : devicearray<devicebool>) =
             let devArray = ComputeResult.assumeSingleton (array.DeviceArrays)
             match devArray.ArrayType with
             |ComputeDataType.ComputeBool ->
@@ -32,8 +55,9 @@ module DeviceHostTransfer =
                 DeviceInterop.retrieveCUDABoolArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
                 hostArray |> Array.map (function |0 -> false; |_ -> true)
             |_ -> failwith "Invalid type"
+
         /// transfer device float element to host
-        static member (<<!!!!) (DeviceArrayCreator, array : deviceelement<devicefloat>) =
+        static member GpuElementToHostElement (DeviceArrayCreator, array : deviceelement<devicefloat>) =
             let devArray = array.DeviceArray
             match devArray.ArrayType with
             |ComputeDataType.ComputeFloat ->
@@ -41,8 +65,9 @@ module DeviceHostTransfer =
                 DeviceInterop.retrieveCUDADoubleArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
                 hostArray |> Array.head
             |_ -> failwith "Invalid type"
+
         /// transfer device bool element to host
-        static member (<<!!!!) (DeviceArrayCreator, array : deviceelement<devicebool>) =
+        static member GpuElementToHostElement (DeviceArrayCreator, array : deviceelement<devicebool>) =
             let devArray = array.DeviceArray
             match devArray.ArrayType with
             |ComputeDataType.ComputeBool ->
@@ -52,6 +77,13 @@ module DeviceHostTransfer =
             |_ -> failwith "Invalid type"
 
     /// copy an array to the device
-    let inline copyArrayToDevice arr = DeviceArrayCreator &!!!!> arr
-    let inline copyArrayToHost arr = DeviceArrayCreator <&!!!! arr
-    let inline copyElementToHost arr = DeviceArrayCreator <<!!!! arr
+    let inline copyArrayToDevice arr =
+        ((^T or ^U) : (static member HostArrayToGpuArray : ^T * ^U -> ^S) (DeviceArrayCreator, arr))
+
+    /// copy an array to the device
+    let inline copyArrayToHost arr =
+        ((^T or ^U) : (static member GpuArrayToHostArray : ^T * ^U -> ^S) (DeviceArrayCreator, arr))
+
+    /// copy an array to the device
+    let inline copyElementToHost elem =
+        ((^T or ^U) : (static member GpuElementToHostElement : ^T * ^U -> ^S) (DeviceArrayCreator, elem))
