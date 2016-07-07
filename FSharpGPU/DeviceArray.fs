@@ -357,13 +357,13 @@ module private DeviceArrayOps =
     /// filters the array using a stable filter
     let filter (code : Expr<'a->devicebool>) (array : devicearray<'a>) =
         let performFilterMap lst = ComputeResult.assumeSingleton <| mapN code lst
-        let result = performFilterMap [array.DeviceArrays]
+        use result = performFilterMap [array.DeviceArrays]
         new devicearray<'a>(GeneralDeviceKernels.filterResult result array.DeviceArrays)
 
     /// partitions the array using a stable filter
     let partition (code : Expr<'a->devicebool>) (array : devicearray<'a>) =
         let performFilterMap lst = ComputeResult.assumeSingleton <| mapN code lst
-        let result = performFilterMap [array.DeviceArrays]
+        use result = performFilterMap [array.DeviceArrays]
         let trues, falses = GeneralDeviceKernels.partitionResult result array.DeviceArrays
         new devicearray<'a>(trues), new devicearray<'a>(falses)
 
