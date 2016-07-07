@@ -152,11 +152,11 @@ module private DeviceArrayOps =
             decomposeMap body newMapArgs
         |TupleGet (expr, i) ->
             match decomposeMap expr variableTable with
-            |ResComputeTupleArray lst -> ResComputeArray lst.[i]
+            |ResComputeTupleArray lst -> lst.[i]
             |_ -> raise <| System.InvalidOperationException()
         |NewTuple (exprList) ->
             exprList 
-            |> List.map (fun cd -> ComputeResult.assumeSingleton <| decomposeMap cd variableTable)
+            |> List.map (fun cd -> decomposeMap cd variableTable)
             |> ResComputeTupleArray
         // IDENTITY
         |SpecificCall <@ id @> (_, _, [expr]) ->
@@ -354,35 +354,18 @@ module private DeviceArrayOps =
                     (ComputeArrays.createArrayOffset 2 (Some <| array1.Length-4) result) // shrinking case : 4 elements shorter with 2 positive offset
         new devicearray<'b>(result) // convert typeless result to typed device array
 
-    let private filterOrPartition (code : Expr<'a->devicebool>) (array : devicearray<'a>) singleFunc tupleFunc =
-        // can safely assume singleton list results because filter returns bool
-        let performFilterMap lst = ComputeResult.assumeSingleton <| mapN code lst
-        // original array may have been tuple so handle singletons and tuples
-        match array.DeviceArrays with
-        |ResComputeArray devArray -> 
-            use result = performFilterMap [array.DeviceArrays]
-            singleFunc devArray result
-        |ResComputeTupleArray devArrays -> 
-            use result = performFilterMap [ResComputeTupleArray devArrays]
-            tupleFunc devArrays result
-
     /// filters the array using a stable filter
     let filter (code) (array : devicearray<'a>) =
-        filterOrPartition code array 
-            (fun devArray result -> // single array case uses base filter function
-                new devicearray<'a>(GeneralDeviceKernels.filter result devArray))
-            (fun devArrays result -> // tuple case uses filterList function
-                new devicearray<'a>(GeneralDeviceKernels.filterList result devArrays))
+        let performFilterMap lst = ComputeResult.assumeSingleton <| mapN code lst
+        let result = performFilterMap [array.DeviceArrays]
+        new devicearray<'a>(GeneralDeviceKernels.filterResult result array.DeviceArrays)
 
     /// partitions the array using a stable filter
     let partition (code) (array : devicearray<'a>) =
-        filterOrPartition code array 
-            (fun devArray result -> // single array case uses base partition function
-                let trues, falses = GeneralDeviceKernels.partition result devArray
-                new devicearray<'a>(trues), new devicearray<'a>(falses))
-            (fun devArrays result -> // tuple case uses partitionList function
-                let trues, falses = GeneralDeviceKernels.partitionList result devArrays |> List.unzip
-                new devicearray<'a>(trues), new devicearray<'a>(falses))
+        let performFilterMap lst = ComputeResult.assumeSingleton <| mapN code lst
+        let result = performFilterMap [array.DeviceArrays]
+        let trues, falses = GeneralDeviceKernels.partitionResult result array.DeviceArrays
+        new devicearray<'a>(trues), new devicearray<'a>(falses)
 
     let evaluateMapsAndReconstructReduction (code : Expr<'a -> 'b -> 'a>) (array : devicearray<'b>) =
         let devArray = ComputeResult.assumeSingleton array.DeviceArrays

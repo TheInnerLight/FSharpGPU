@@ -27,39 +27,7 @@ exception DeviceException of string
 exception DeviceOutOfMemoryException of string
 /// Functions for device utility functionality
 module internal DeviceInterop =
-#if x64
-    [<Literal>]
-    let platformDLL = @"..\..\..\FSharpGPUInterop\Debug\x64\FSharpGPUInterop.dll"
-#else
-    [<Literal>]
-    let platformDLL = @"..\..\..\FSharpGPUInterop\Debug\Win32\FSharpGPUInterop.dll"
-#endif
-
-    [<DllImport(platformDLL, EntryPoint="createCUDAArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int createUninitialisedArray(int size, int typeSize, IntPtr& handle)
-
-    [<DllImport(platformDLL, EntryPoint="freeCUDAArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int freeArray(IntPtr handle)
-
-    [<DllImport(platformDLL, EntryPoint="createCUDADoubleArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int createUninitialisedCUDADoubleArray(int size, IntPtr& handle)
-
-    [<DllImport(platformDLL, EntryPoint="initialiseCUDADoubleArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int initialiseCUDADoubleArray(double[] flts, int n, IntPtr& handle)
-
-    [<DllImport(platformDLL, EntryPoint="retrieveCUDADoubleArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int retrieveCUDADoubleArray(IntPtr handle, int offset, double[] flts, int n)
-
-    [<DllImport(platformDLL, EntryPoint="createCUDABoolArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int createUninitialisedCUDABoolArray(int size, IntPtr& handle)
-
-    [<DllImport(platformDLL, EntryPoint="initialiseCUDABoolArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int initialiseCUDABoolArray(bool[] flts, int n, IntPtr& handle)
-
-    [<DllImport(platformDLL, EntryPoint="retrieveCUDABoolArray", CallingConvention = CallingConvention.Cdecl)>]
-    extern int retrieveCUDABoolArray(IntPtr handle, int offset, int[] flts, int n)
-
-    let cudaCallWithExceptionCheck func =
+    let checkCudaResponse func =
         let value = func
         match value with
         |0 -> ()

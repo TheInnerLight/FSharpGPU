@@ -94,6 +94,7 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="External.fs" />
     <Compile Include="DeviceLowLevel.fs" />
     <Compile Include="DeviceTypes.fs" />
     <Compile Include="DeviceHostTransfer.fs" />

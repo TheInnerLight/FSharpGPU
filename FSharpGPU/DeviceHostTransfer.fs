@@ -27,13 +27,13 @@ module DeviceHostTransfer =
         /// transfer float array to device
         static member HostArrayToGpuArray (DeviceArrayCreator, arr : float[]) =
             let mutable cudaPtr = System.IntPtr(0)
-            DeviceInterop.initialiseCUDADoubleArray(arr, Array.length arr, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+            GeneralDevice.initialiseCUDADoubleArray(arr, Array.length arr, &cudaPtr) |> DeviceInterop.checkCudaResponse
             new devicearray<devicefloat>(new ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, Array.length arr, FullArray, UserGenerated))
 
         /// transfer bool array to device
         static member HostArrayToGpuArray (DeviceArrayCreator, arr : bool[]) =
             let mutable cudaPtr = System.IntPtr(0)
-            DeviceInterop.initialiseCUDABoolArray(arr, Array.length arr, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+            GeneralDevice.initialiseCUDABoolArray(arr, Array.length arr, &cudaPtr) |> DeviceInterop.checkCudaResponse
             new devicearray<devicefloat>(new ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, Array.length arr, FullArray, UserGenerated))
 
         /// transfer device float array to host
@@ -42,7 +42,7 @@ module DeviceHostTransfer =
             match devArray.ArrayType with
             |ComputeDataType.ComputeFloat ->
                 let hostArray = Array.zeroCreate<float> (devArray.Length)
-                DeviceInterop.retrieveCUDADoubleArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
+                GeneralDevice.retrieveCUDADoubleArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.checkCudaResponse
                 hostArray
             |_ -> failwith "Invalid type"
 
@@ -52,7 +52,7 @@ module DeviceHostTransfer =
             match devArray.ArrayType with
             |ComputeDataType.ComputeBool ->
                 let hostArray = Array.zeroCreate<int> (devArray.Length)
-                DeviceInterop.retrieveCUDABoolArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
+                GeneralDevice.retrieveCUDABoolArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.checkCudaResponse
                 hostArray |> Array.map (function |0 -> false; |_ -> true)
             |_ -> failwith "Invalid type"
 
@@ -62,7 +62,7 @@ module DeviceHostTransfer =
             match devArray.ArrayType with
             |ComputeDataType.ComputeFloat ->
                 let hostArray = Array.zeroCreate<float> (devArray.Length)
-                DeviceInterop.retrieveCUDADoubleArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
+                GeneralDevice.retrieveCUDADoubleArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.checkCudaResponse
                 hostArray |> Array.head
             |_ -> failwith "Invalid type"
 
@@ -72,7 +72,7 @@ module DeviceHostTransfer =
             match devArray.ArrayType with
             |ComputeDataType.ComputeBool ->
                 let hostArray = Array.zeroCreate<int> (devArray.Length)
-                DeviceInterop.retrieveCUDABoolArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.cudaCallWithExceptionCheck
+                GeneralDevice.retrieveCUDABoolArray(devArray.CudaPtr, devArray.Offset, hostArray, hostArray.Length) |> DeviceInterop.checkCudaResponse
                 hostArray |> Array.map (function |0 -> false; |_ -> true) |> Array.head
             |_ -> failwith "Invalid type"
 

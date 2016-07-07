@@ -13,21 +13,21 @@ module internal ComputeArrays =
     /// create and fill a device array of all floats with a specific value
     let fillFloat length value =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        DeviceFloatKernels.setAllElementsToConstant(cudaPtr, 0, length, value) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.checkCudaResponse
+        DeviceFloatKernels.setAllElementsToConstant(cudaPtr, 0, length, value) |> DeviceInterop.checkCudaResponse
         new ComputeArray(ComputeDataType.ComputeFloat, cudaPtr, length, FullArray, UserGenerated)
     /// create and fill a device array of all floats with a specific value
     let fillBool length value =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedCUDABoolArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedCUDABoolArray(length, &cudaPtr) |> DeviceInterop.checkCudaResponse
         //DeviceBoolKernels.setAllElementsToConstant(cudaPtr, 0, length, 0.0) |> DeviceInterop.cudaCallWithExceptionCheck
         new ComputeArray(ComputeDataType.ComputeBool, cudaPtr, length, FullArray, UserGenerated)
     /// create and fill a device array of all floats with a specific value
     let computeArrayOfSameType length (array : ComputeArray) =
         let mutable cudaPtr = System.IntPtr(0)
         match array.ArrayType with
-        |ComputeFloat -> DeviceInterop.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
-        |ComputeBool -> DeviceInterop.createUninitialisedCUDABoolArray(length, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        |ComputeFloat -> GeneralDevice.createUninitialisedCUDADoubleArray(length, &cudaPtr) |> DeviceInterop.checkCudaResponse
+        |ComputeBool -> GeneralDevice.createUninitialisedCUDABoolArray(length, &cudaPtr) |> DeviceInterop.checkCudaResponse
         |_ -> failwith "Unsupported type"
         new ComputeArray(array.ArrayType, cudaPtr, length, FullArray, UserGenerated)
 
@@ -38,10 +38,10 @@ module internal ComputeResults =
         |ResComputeBool bl -> ResComputeArray <| ComputeArrays.fillBool length bl
         |array -> array
 
-    let length =
+    let rec length =
         function
         |ResComputeArray devArray -> devArray.Length
-        |ResComputeTupleArray devArrays -> (devArrays |> List.head).Length
+        |ResComputeTupleArray devArrays -> length (List.head devArrays)
 
 
 

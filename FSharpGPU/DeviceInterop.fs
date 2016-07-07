@@ -18,233 +18,53 @@ along with FSharpGPU.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace NovelFS.FSharpGPU
 
-open System
-open System.Runtime.InteropServices
-
-module internal DeviceFloatKernels = 
-
-    // Float to Float mappings
-
-    // Addition
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapAdd", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapAdd(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Add", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2Add(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    // Subtraction
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSubtract", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapSubtract(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSubtract2", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapSubtract2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Subtract", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2Subtract(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    // Multiplication
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapMultiply", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapMultiply(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Multiply", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2Multiply(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    // Division
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapDivide", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapDivide(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapDivide2", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapDivide2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Divide", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2Divide(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    // Power
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapPower", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapPower(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapPower2", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapPower2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmap2Power", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2Power(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    // Various maths functions
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSqrt", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapSqrt(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapArcCos", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapArcCos(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapCos", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapCos(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapCosh", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapCosh(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapArcSin", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapArcSin(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSin", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapSin(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapSinh", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapSinh(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapArcTan", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapArcTan(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapTan", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapTan(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapTanh", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapTanh(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapLog", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapLog(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddmapLog10", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapLog10(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    // Float to Bool mappings
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGT", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapGreaterThan(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGT2", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapGreaterThan2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2GT", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2GreaterThan(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGTE", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapGreaterThanOrEqual(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapGTE2", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapGreaterThanOrEqual2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2GTE", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2GreaterThanOrEqual(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLT", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapLessThan(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLT2", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapLessThan2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2LT", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2LessThan(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLTE", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapLessThanOrEqual(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapLTE2", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapLessThanOrEqual2(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2LTE", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2LessThanOrEqual(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapEquality", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapEquality(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2Equality", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2Equality(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmapNotEquality", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapInequality(IntPtr inArr, int inputOffset, int inputN, double flt, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="dbmap2NotEquality", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2NotEquality(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    // Float to Float reductions
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddreduceToHalf", CallingConvention = CallingConvention.Cdecl)>]
-    extern int reduceToHalf(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddsumTotal", CallingConvention = CallingConvention.Cdecl)>]
-    extern int sumTotal(IntPtr inArr, int inputOffset, int inputN, IntPtr outArr)
-
-    // Float to Float filters
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddfilter", CallingConvention = CallingConvention.Cdecl)>]
-    extern int filter(IntPtr inArr, IntPtr predArr, int inputN, IntPtr& outArr, int& size)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddpartition", CallingConvention = CallingConvention.Cdecl)>]
-    extern int partition(IntPtr inArr, IntPtr predArr, int inputN, IntPtr& outTrueArr, IntPtr& outFalseArr, int& trueSize, int& falseSize);
-
-    // Float mutation
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="ddsetAll", CallingConvention = CallingConvention.Cdecl)>]
-    extern int setAllElementsToConstant(IntPtr inArr, int inputOffset, int inputN, double value)
-
-module internal DeviceBoolKernels = 
-
-    // Bool to Bool maps
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmapConditionAnd", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapConditionalAnd(IntPtr inArr, int inputOffset, int inputN, int bl, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmap2ConditionAnd", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2ConditionalAnd(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmapConditionOr", CallingConvention = CallingConvention.Cdecl)>]
-    extern int mapConditionalOr(IntPtr inArr, int inputOffset, int inputN, int bl, IntPtr outArr)
-
-    [<DllImport(DeviceInterop.platformDLL, EntryPoint="bbmap2ConditionOr", CallingConvention = CallingConvention.Cdecl)>]
-    extern int map2ConditionalOr(IntPtr inArr1, int inOff1, IntPtr inArr2, int inOff2, int n, IntPtr outArr)
-
 module internal GeneralDeviceKernels = 
+
     /// A (type preserving) map function that involves a device array and a constant
     let private typePreservingMapWithConst cudaMapOperation constant (cudaArray : ComputeArray) =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length cudaArray.ArrayType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length cudaArray.ArrayType, &cudaPtr) |> DeviceInterop.checkCudaResponse
         let resultArray = new ComputeArray(cudaArray.ArrayType, cudaPtr, cudaArray.Length, FullArray, AutoGenerated)
-        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, constant, resultArray.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, constant, resultArray.CudaPtr) |> DeviceInterop.checkCudaResponse
         resultArray
 
     /// A map function that involves a device array and a constant
     let private typeChangingMapWithConst cudaMapOperation constant (cudaArray : ComputeArray) newType =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length newType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length newType, &cudaPtr) |> DeviceInterop.checkCudaResponse
         let resultArray = new ComputeArray(newType, cudaPtr, cudaArray.Length, FullArray, AutoGenerated)
-        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, constant, resultArray.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, constant, resultArray.CudaPtr) |> DeviceInterop.checkCudaResponse
         resultArray
 
     /// A map function that involves only a device array
     let private typeChangingMap cudaMapOperation (cudaArray : ComputeArray) newType =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length newType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length newType, &cudaPtr) |> DeviceInterop.checkCudaResponse
         let resultArray = new ComputeArray(newType, cudaPtr, cudaArray.Length, FullArray, AutoGenerated)
-        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, resultArray.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, resultArray.CudaPtr) |> DeviceInterop.checkCudaResponse
         resultArray
     /// A (type preserving) map function that involves only a device array
     let private typePreservingMap cudaMapOperation (cudaArray : ComputeArray) =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length cudaArray.ArrayType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedArray(cudaArray.Length, ComputeDataInfo.length cudaArray.ArrayType, &cudaPtr) |> DeviceInterop.checkCudaResponse
         let resultArray = new ComputeArray(cudaArray.ArrayType, cudaPtr, cudaArray.Length, FullArray, AutoGenerated)
-        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, resultArray.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        cudaMapOperation (cudaArray.CudaPtr, cudaArray.Offset, cudaArray.Length, resultArray.CudaPtr) |> DeviceInterop.checkCudaResponse
         resultArray
 
     /// A map2 function that involves two device arrays
     let private typeChangingMap2 cudaMap2Operation (cudaArray1 : ComputeArray) (cudaArray2 : ComputeArray) newType =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedArray(cudaArray1.Length, ComputeDataInfo.length newType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedArray(cudaArray1.Length, ComputeDataInfo.length newType, &cudaPtr) |> DeviceInterop.checkCudaResponse
         let resultArray = new ComputeArray(newType, cudaPtr, cudaArray1.Length, FullArray, AutoGenerated)
-        cudaMap2Operation (cudaArray1.CudaPtr, cudaArray1.Offset, cudaArray2.CudaPtr, cudaArray2.Offset, cudaArray1.Length, resultArray.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        cudaMap2Operation (cudaArray1.CudaPtr, cudaArray1.Offset, cudaArray2.CudaPtr, cudaArray2.Offset, cudaArray1.Length, resultArray.CudaPtr) |> DeviceInterop.checkCudaResponse
         resultArray
 
     /// A (type preserving) map2 function that involves two device arrays
     let private typePreservingMap2 cudaMap2Operation (cudaArray1 : ComputeArray) (cudaArray2 : ComputeArray) =
         let mutable cudaPtr = System.IntPtr(0)
-        DeviceInterop.createUninitialisedArray(cudaArray1.Length, ComputeDataInfo.length cudaArray1.ArrayType, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        GeneralDevice.createUninitialisedArray(cudaArray1.Length, ComputeDataInfo.length cudaArray1.ArrayType, &cudaPtr) |> DeviceInterop.checkCudaResponse
         let resultArray = new ComputeArray(cudaArray1.ArrayType, cudaPtr, cudaArray1.Length, FullArray, AutoGenerated)
-        cudaMap2Operation (cudaArray1.CudaPtr, cudaArray1.Offset, cudaArray2.CudaPtr, cudaArray2.Offset, cudaArray1.Length, resultArray.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+        cudaMap2Operation (cudaArray1.CudaPtr, cudaArray1.Offset, cudaArray2.CudaPtr, cudaArray2.Offset, cudaArray1.Length, resultArray.CudaPtr) |> DeviceInterop.checkCudaResponse
         resultArray
 
     /// A helper function for mapping over cases useful for creating non-commutative arithmetic functions which can operate on many device types
@@ -431,13 +251,23 @@ module internal GeneralDeviceKernels =
         let mutable length = 0
         match arrToFltr.ArrayType with
         |ComputeFloat ->
-            DeviceFloatKernels.filter(arrToFltr.CudaPtr, arrTrueFalse.CudaPtr, arrToFltr.Length, &cudaPtr, &length) |> DeviceInterop.cudaCallWithExceptionCheck
+            DeviceFloatKernels.filter(arrToFltr.CudaPtr, arrTrueFalse.CudaPtr, arrToFltr.Length, &cudaPtr, &length) |> DeviceInterop.checkCudaResponse
         |_ -> raise <| System.NotSupportedException()
         new ComputeArray(arrToFltr.ArrayType, cudaPtr, length, FullArray, UserGenerated)
 
     
     let filterList arrTrueFalse arrsToFltr  =
         arrsToFltr |> List.map (filter arrTrueFalse)
+
+    let rec filterResult arrTrueFalse resToFltr =
+        match resToFltr with
+        |ResComputeArray devArray -> 
+            let v = filter arrTrueFalse devArray
+            ResComputeArray v
+        |ResComputeTupleArray devTplArray -> 
+            devTplArray
+            |> List.map (filterResult arrTrueFalse) 
+            |> ResComputeTupleArray
 
     /// A function for partitioning the device elements by an array of true/false values which determines which array the corresponding element should be included in
     let partition (arrTrueFalse : ComputeArray) (arrToFltr : ComputeArray)  =
@@ -447,13 +277,25 @@ module internal GeneralDeviceKernels =
         let mutable falseLength = 0
         match arrToFltr.ArrayType with
         |ComputeFloat ->
-            DeviceFloatKernels.partition(arrToFltr.CudaPtr, arrTrueFalse.CudaPtr, arrToFltr.Length, &trueCudaPtr, &falseCudaPtr, &trueLength, &falseLength) |> DeviceInterop.cudaCallWithExceptionCheck
+            DeviceFloatKernels.partition(arrToFltr.CudaPtr, arrTrueFalse.CudaPtr, arrToFltr.Length, &trueCudaPtr, &falseCudaPtr, &trueLength, &falseLength) |> DeviceInterop.checkCudaResponse
         |_ -> raise <| System.NotSupportedException()
         (new ComputeArray(arrToFltr.ArrayType, trueCudaPtr, trueLength, FullArray, UserGenerated),
          new ComputeArray(arrToFltr.ArrayType, falseCudaPtr, falseLength, FullArray, UserGenerated))
 
     let partitionList arrTrueFalse arrsToFltr  =
         arrsToFltr |> List.map (partition arrTrueFalse)
+
+    let rec partitionResult arrTrueFalse arrsToFltr =
+        match arrsToFltr with
+        |ResComputeArray devArray -> 
+            let v1, v2 = partition arrTrueFalse devArray
+            ResComputeArray v1, ResComputeArray v2
+        |ResComputeTupleArray devTplArray -> 
+            let l1, l2 = 
+                devTplArray
+                |> List.map (partitionResult arrTrueFalse) 
+                |> List.unzip
+            ResComputeTupleArray(l1), ResComputeTupleArray(l2)
 
     // Reduction
 
@@ -462,9 +304,9 @@ module internal GeneralDeviceKernels =
         |ComputeFloat ->
             let mutable cudaPtr = System.IntPtr(0)
             let len = if arr.Length % 2 = 0 then arr.Length / 2 else arr.Length / 2 + 1
-            DeviceInterop.createUninitialisedCUDADoubleArray(len, &cudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+            GeneralDevice.createUninitialisedCUDADoubleArray(len, &cudaPtr) |> DeviceInterop.checkCudaResponse
             let ca = new ComputeArray(ComputeFloat, cudaPtr, len, FullArray, AutoGenerated)
-            DeviceFloatKernels.reduceToHalf(arr.CudaPtr, 0, arr.Length, ca.CudaPtr) |> DeviceInterop.cudaCallWithExceptionCheck
+            DeviceFloatKernels.reduceToHalf(arr.CudaPtr, 0, arr.Length, ca.CudaPtr) |> DeviceInterop.checkCudaResponse
             ca
         |_ -> raise <| System.NotSupportedException()
 
