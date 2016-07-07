@@ -23,6 +23,8 @@ open System.Runtime.InteropServices
 
 /// The exception that is thrown when a call to the device fails
 exception DeviceException of string
+/// The exception that is thrown when an attempt to access an illegal device memory address is made
+exception DeviceIllegalAccessException of string
 /// The exception that is thrown when there is not enough device memory available to perform the requested operation.
 exception DeviceOutOfMemoryException of string
 /// Functions for device utility functionality
@@ -42,4 +44,5 @@ module internal DeviceInterop =
         |9 -> raise <| DeviceException "cudaErrorInvalidConfiguration :	This indicates that a kernel launch is requesting resources that can never be satisfied by the current device. Requesting more shared memory per block than the device supports will trigger this error, as will requesting too many threads or blocks."
         |10 -> raise <| DeviceException "cudaErrorInvalidDevice : This indicates that the device ordinal supplied by the user does not correspond to a valid CUDA device."
         |11 -> raise <| DeviceException "cudaErrorInvalidValue : This indicates that one or more of the parameters passed to the API call is not within an acceptable range of values."
+        |77 -> raise <| DeviceIllegalAccessException "An illegal device memory access was attempted.  This could be the result of attempting out of bounds memory access."
         |_ -> raise <| DeviceException (sprintf "cuda error code %i" value)
