@@ -1,0 +1,25 @@
+type project
+title
+    FSharpGPU
+owners
+    Phil Curzon
+authors 
+    Phil Curzon
+projectUrl
+    http://github.com/TheInnerLight/F#GPU
+iconUrl
+    https://raw.githubusercontent.com/TheInnerLight/F#GPU/master/docs/files/img/logo.png
+licenseUrl
+    http://github.com/TheInnerLight/F#GPU/blob/master/LICENSE.txt
+requireLicenseAcceptance
+    false
+copyright
+    Copyright 2015
+tags
+    f# gpu cuda gpgpu numerics
+summary
+    F# GPU library
+description
+    A library to trivialise GPGPU computing in F#
+
+
